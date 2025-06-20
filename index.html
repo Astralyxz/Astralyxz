@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Economía Interna de Astralyxz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- 
+        Chosen Palette: Strategic Teal & Gold
+        Application Structure Plan: The SPA is designed as an interactive systems diagram. The core is a visual flowchart of the Astralyxz Coin (AC) economy, showing the main stages: Emission, Circulation, and Control. Users click on these nodes to populate a detailed information panel below. This structure was chosen because the source report describes a dynamic system; visualizing the system's flow is more intuitive for understanding cause and effect than a linear text. The architecture includes interactive modules like a "Raffle Calculator" and a "Roadmap" to make abstract concepts tangible and to group information by task (understanding profitability, seeing the future) rather than by report chapter.
+        Visualization & Content Choices:
+        - Economic Flow: Goal: Show relationships. Method: HTML/CSS Flexbox diagram. Interaction: Click nodes to update detail panel. Justification: Visualizes the core economic loop for intuitive understanding. No SVG/Mermaid.
+        - Emission/Circulation Details: Goal: Inform. Method: Dynamically updated text blocks. Interaction: Content changes on node click. Justification: Provides context-sensitive information without cluttering the UI.
+        - Raffle Profitability: Goal: Compare/Inform. Method: HTML Inputs + JS Calculator + Chart.js Donut Chart. Interaction: User inputs data, chart updates instantly to show profit margin. Justification: Turns a static formula into an interactive tool for better comprehension.
+        - Risk Controls: Goal: Inform. Method: Styled list with icons. Interaction: Shown on "Control" node click. Justification: Highlights critical risk mitigation rules.
+        - Roadmap: Goal: Show sequence. Method: Horizontal HTML/CSS timeline. Interaction: Static visual flow. Justification: Clearly presents the strategic phases of the project.
+        CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        .diagram-node {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .diagram-node:hover, .diagram-node.active {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(17, 138, 178, 0.4);
+            border-color: #0d9488;
+        }
+        .flow-arrow {
+            position: relative;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+        }
+        .flow-arrow::after {
+            content: '→';
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+        @media (max-width: 767px) {
+            .flow-arrow::after {
+                content: '↓';
+                font-size: 2rem;
+            }
+        }
+        .detail-panel-content {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 300px;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto px-4 py-8 md:py-12">
+        <header class="text-center mb-10 md:mb-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-800">Economía Interna Integral</h1>
+            <p class="text-xl text-teal-700 mt-2 font-medium">Un Análisis Interactivo del Modelo de Astralyxz Coin (AC)</p>
+        </header>
+
+        <section id="economic-flow" class="mb-12">
+            <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">El siguiente diagrama representa el ciclo de vida de la Astralyxz Coin. Haz clic en cada etapa para explorar en detalle cómo se emiten, circulan y controlan las monedas dentro de la plataforma.</p>
+            <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-0">
+                <div data-target="emission" class="diagram-node w-full md:w-1/4 bg-white p-4 rounded-lg shadow-md border-2 border-transparent text-center">
+                    <span class="text-4xl"> 💸 </span>
+                    <h3 class="font-bold text-lg mt-2">EMISIÓN</h3>
+                    <p class="text-xs text-gray-500">Creación de Coins</p>
+                </div>
+                <div class="flow-arrow w-full md:w-1/12 h-16 md:h-auto"></div>
+                <div data-target="circulation" class="diagram-node w-full md:w-1/4 bg-white p-4 rounded-lg shadow-md border-2 border-transparent text-center">
+                     <span class="text-4xl"> 🔄 </span>
+                    <h3 class="font-bold text-lg mt-2">CIRCULACIÓN</h3>
+                    <p class="text-xs text-gray-500">Uso de Coins</p>
+                </div>
+                 <div class="flow-arrow w-full md:w-1/12 h-16 md:h-auto"></div>
+                <div data-target="control" class="diagram-node w-full md:w-1/4 bg-white p-4 rounded-lg shadow-md border-2 border-transparent text-center">
+                    <span class="text-4xl"> 🛡️ </span>
+                    <h3 class="font-bold text-lg mt-2">CONTROL</h3>
+                    <p class="text-xs text-gray-500">Reglas y Riesgos</p>
+                </div>
+            </div>
+        </section>
+
+        <main id="detail-panel" class="min-h-[300px] bg-white/70 p-6 md:p-8 rounded-xl shadow-lg border border-gray-200">
+        </main>
+
+        <section id="calculator-section" class="mt-12 bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-200">
+            <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Calculadora de Rentabilidad de Rifas</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="space-y-4">
+                    <div>
+                        <label for="tickets" class="font-medium text-gray-700">Tickets Vendidos Mínimos</label>
+                        <input type="number" id="tickets" value="100" class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                    <div>
+                        <label for="price" class="font-medium text-gray-700">Precio por Ticket (en AC)</label>
+                        <input type="number" id="price" value="10" class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                    <div>
+                        <label for="prize" class="font-medium text-gray-700">Costo del Premio (en AC)</label>
+                        <input type="number" id="prize" value="150" class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                    <div class="bg-teal-50 p-4 rounded-lg text-center">
+                        <p class="text-sm text-teal-800">Margen de Ganancia Asegurado</p>
+                        <p id="margin-output" class="text-3xl font-bold text-teal-600">85.00%</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="profit-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="roadmap-section" class="mt-12">
+             <h2 class="text-2xl font-bold text-center mb-8 text-gray-800">Hoja de Ruta Estratégica</h2>
+             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                    <div class="font-bold text-teal-600 mb-2">FASE 1</div>
+                    <h4 class="font-semibold text-gray-700">MVP</h4>
+                    <p class="text-xs text-gray-500 mt-1">Implementación de economía y marketplace básicos.</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                    <div class="font-bold text-teal-600 mb-2">FASE 2</div>
+                    <h4 class="font-semibold text-gray-700">Crecimiento</h4>
+                    <p class="text-xs text-gray-500 mt-1">Sistemas de referidos, rankings e influencers.</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                    <div class="font-bold text-teal-600 mb-2">FASE 3</div>
+                    <h4 class="font-semibold text-gray-700">Escalabilidad</h4>
+                    <p class="text-xs text-gray-500 mt-1">Publicidad segmentada y dropshipping optimizado.</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                    <div class="font-bold text-teal-600 mb-2">FASE 4</div>
+                    <h4 class="font-semibold text-gray-700">Optimización</h4>
+                    <p class="text-xs text-gray-500 mt-1">Análisis predictivo y ajuste dinámico del modelo económico.</p>
+                </div>
+             </div>
+        </section>
+    </div>
+
+    <script>
+        const appData = {
+            introduction: {
+                title: 'Bienvenido al Corazón Económico de Astralyxz',
+                content: 'Esta es una simulación interactiva del modelo económico de la Astralyxz Coin (AC). Cada AC tiene un valor fijo de $100 CLP. Usa el diagrama de flujo superior para explorar los pilares que aseguran la estabilidad, rentabilidad y crecimiento sostenible de la plataforma.'
+            },
+            emission: {
+                title: 'Fuentes de Emisión de Astralyxz Coins',
+                content: `La creación de nuevos Coins (AC) está estrictamente controlada y ligada a acciones que generan valor para la plataforma. Estas son las únicas fuentes:`,
+                points: [
+                    '<strong>Compras directas:</strong> Usuarios adquieren AC con dinero real, generando ingresos inmediatos.',
+                    '<strong>Recompensas por referidos:</strong> Se emiten Coins para incentivar la viralidad y el crecimiento orgánico.',
+                    '<strong>Cashback por participación:</strong> Un 30% del valor de rifas perdidas se devuelve en AC para fomentar la retención.',
+                    '<strong>Premios en rifas:</strong> Los premios se conceden en AC, manteniendo el valor dentro del ecosistema.'
+                ]
+            },
+            circulation: {
+                title: 'Circulación y Absorción de Coins',
+                content: 'El sistema está diseñado para que los Coins fluyan constantemente, evitando acumulaciones y manteniendo una economía interna saludable. Los usos principales son:',
+                points: [
+                    '<strong>Participación en Rifas:</strong> El principal motor de gasto. Cada ticket tiene un costo en AC.',
+                    '<strong>Compras en Marketplace:</strong> Productos físicos (electrónicos, etc.) disponibles para canje, incentivando la redención de premios.',
+                    '<strong>Incentivo Cruzado:</strong> Cada compra en el marketplace otorga un ticket de rifa gratis, cerrando el ciclo económico.',
+                    '<strong>Canje Inmediato:</strong> Los premios de rifas deben canjearse en 72 horas, forzando la circulación rápida de los Coins ganados.'
+                ]
+            },
+            control: {
+                title: 'Control de Riesgos y Prevención de Acumulación',
+                content: 'Para mantener el equilibrio y la justicia, se implementan varias reglas estratégicas que previenen desbalances económicos y comportamientos predatorios:',
+                points: [
+                    '<strong>Límites de Compra:</strong> Se limita la cantidad de AC que un usuario puede comprar para evitar la aparición de "ballenas".',
+                    '<strong>Penalización por Inactividad:</strong> Los premios no canjeados en 72h pierden el 50% de su valor, combatiendo la acumulación.',
+                    '<strong>Restricción de Reutilización:</strong> Los AC ganados como premio no pueden usarse inmediatamente en nuevas rifas, evitando que un solo ganador domine el ecosistema.'
+                ]
+            }
+        };
+
+        const detailPanel = document.getElementById('detail-panel');
+        const diagramNodes = document.querySelectorAll('.diagram-node');
+        const calculatorInputs = ['tickets', 'price', 'prize'].map(id => document.getElementById(id));
+        const marginOutput = document.getElementById('margin-output');
+        let profitChart;
+
+        function updateDetailPanel(targetId) {
+            const data = appData[targetId];
+            if (!data) return;
+
+            let pointsHTML = '';
+            if (data.points) {
+                pointsHTML = `<ul class="space-y-3 list-inside mt-4">${data.points.map(p => `<li class="flex items-start"><span class="text-teal-500 mr-2 mt-1">▸</span><span>${p}</span></li>`).join('')}</ul>`;
+            }
+
+            detailPanel.innerHTML = `
+                <div class="detail-panel-content">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">${data.title}</h2>
+                    <p class="text-gray-600">${data.content}</p>
+                    ${pointsHTML}
+                </div>
+            `;
+        }
+
+        function handleNodeClick(event) {
+            const targetId = event.currentTarget.dataset.target;
+            
+            diagramNodes.forEach(node => node.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            updateDetailPanel(targetId);
+        }
+
+        function calculateRaffle() {
+            const [tickets, price, prize] = calculatorInputs.map(input => parseFloat(input.value) || 0);
+
+            if (tickets <= 0 || price <= 0) {
+                marginOutput.textContent = 'N/A';
+                updateProfitChart(0, 100);
+                return;
+            }
+
+            const revenue = tickets * price;
+            const profit = revenue - prize;
+            const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
+            
+            marginOutput.textContent = `${margin.toFixed(2)}%`;
+            updateProfitChart(prize, profit > 0 ? profit : 0);
+        }
+
+        function updateProfitChart(cost, profit) {
+            if (profitChart) {
+                profitChart.data.datasets[0].data = [cost, profit];
+                profitChart.update();
+            }
+        }
+        
+        function initializeChart() {
+            const ctx = document.getElementById('profit-chart').getContext('2d');
+            profitChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Costo del Premio (AC)', 'Ganancia Neta (AC)'],
+                    datasets: [{
+                        data: [150, 850],
+                        backgroundColor: ['#f59e0b', '#0d9488'],
+                        borderColor: '#f8f9fa',
+                        borderWidth: 4,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw} AC`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            calculateRaffle();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            diagramNodes.forEach(node => node.addEventListener('click', handleNodeClick));
+            
+            calculatorInputs.forEach(input => input.addEventListener('input', calculateRaffle));
+            
+            const firstNode = diagramNodes[0];
+            firstNode.classList.add('active');
+            updateDetailPanel(firstNode.dataset.target);
+            
+            initializeChart();
+        });
+
+    </script>
+</body>
+</html>
