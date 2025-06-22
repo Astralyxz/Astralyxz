@@ -10,14 +10,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
     <!-- 
-        Chosen Palette: Strategic Teal & Gold
-        Application Structure Plan: The SPA is designed as an interactive systems diagram. The core is a visual flowchart of the Astralyxz Coin (AC) economy, showing the main stages: Emission, Circulation, and Control. Users click on these nodes to populate a detailed information panel below. This structure was chosen because the source report describes a dynamic system; visualizing the system's flow is more intuitive for understanding cause and effect than a linear text. The architecture includes interactive modules like a "Raffle Calculator" and a "Roadmap" to make abstract concepts tangible and to group information by task (understanding profitability, seeing the future) rather than by report chapter.
+        Chosen Palette: Strategic Teal & Gold + Corporate Blue & Neutral Gray
+        Application Structure Plan: This is a merged document. It retains the main SPA structure of "astralyxz_economy_spa" (interactive diagram) and integrates the functional "Raffle Profitability Simulator" component from "simulador_rentabilidad_standalone". The integration replaces the non-functional calculator section with the working one, creating a single, cohesive application.
         Visualization & Content Choices:
-        - Economic Flow: Goal: Show relationships. Method: HTML/CSS Flexbox diagram. Interaction: Click nodes to update detail panel. Justification: Visualizes the core economic loop for intuitive understanding. No SVG/Mermaid.
-        - Emission/Circulation Details: Goal: Inform. Method: Dynamically updated text blocks. Interaction: Content changes on node click. Justification: Provides context-sensitive information without cluttering the UI.
-        - Raffle Profitability: Goal: Compare/Inform. Method: HTML Inputs + JS Calculator + Chart.js Donut Chart. Interaction: User inputs data, chart updates instantly to show profit margin. Justification: Turns a static formula into an interactive tool for better comprehension.
-        - Risk Controls: Goal: Inform. Method: Styled list with icons. Interaction: Shown on "Control" node click. Justification: Highlights critical risk mitigation rules.
-        - Roadmap: Goal: Show sequence. Method: Horizontal HTML/CSS timeline. Interaction: Static visual flow. Justification: Clearly presents the strategic phases of the project.
+        - The application maintains the interactive flow diagram and detail panel from the original code.
+        - The calculator section is now implemented with HTML range sliders and a Chart.js Bar Chart for a more interactive and functional experience, as per the working component.
         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
     -->
     <style>
@@ -64,20 +61,45 @@
         .chart-container {
             position: relative;
             width: 100%;
-            max-width: 300px;
+            max-width: 500px;
             margin-left: auto;
             margin-right: auto;
-            height: 300px;
-            max-height: 300px;
+            height: 280px;
+            max-height: 280px;
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            outline: none;
+            transition: background 0.3s;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #3182ce;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #3182ce;
+            cursor: pointer;
+            border-radius: 50%;
         }
     </style>
 </head>
 <body class="antialiased">
-
     <div class="container mx-auto px-4 py-8 md:py-12">
         <header class="text-center mb-10 md:mb-12">
             <h1 class="text-4xl md:text-5xl font-extrabold text-gray-800">TE AMO LARA!!</h1>
-            <p class="text-xl text-teal-700 mt-2 font-medium"> Análisis Interactivo del Modelo Astralyxz Coin (AC)</p>
+            <p class="text-xl text-teal-700 mt-2 font-medium">Análisis Interactivo del Modelo Astralyxz Coin (AC)</p>
         </header>
 
         <section id="economic-flow" class="mb-12">
@@ -102,33 +124,44 @@
                 </div>
             </div>
         </section>
-
-        <main id="detail-panel" class="min-h-[300px] bg-white/70 p-6 md:p-8 rounded-xl shadow-lg border border-gray-200">
+        
+        <main id="detail-panel" class="min-h-[300px] bg-white/70 p-6 md:p-8 rounded-xl shadow-lg border border-gray-200 mb-12">
         </main>
 
-        <section id="calculator-section" class="mt-12 bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-200">
-            <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Calculadora de Rentabilidad de Rifas</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <div class="space-y-4">
+        <!-- Seccion del Simulador integrada y funcional -->
+        <section id="simulator" class="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-200 mb-12">
+            <h2 class="text-2xl font-bold text-center mb-2 text-gray-800">Simulador de Rentabilidad de Rifas</h2>
+            <p class="text-center text-sm text-gray-500 mb-6 max-w-2xl mx-auto">Ajusta los parámetros para calcular el precio mínimo por ticket necesario para alcanzar el margen de ganancia objetivo, basado en la fórmula de sostenibilidad de Astralyxz.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div class="space-y-5">
                     <div>
-                        <label for="tickets" class="font-medium text-gray-700">Tickets Vendidos Mínimos</label>
-                        <input type="number" id="tickets" value="100" class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500">
+                        <div class="flex justify-between items-center">
+                            <label for="prizeCost" class="font-medium text-gray-700">Costo del Premio (en CLP)</label>
+                            <output for="prizeCost" id="prizeCostOutput" class="font-bold text-blue-600">$500.000</output>
+                        </div>
+                        <input type="range" id="prizeCost" min="10000" max="1000000" value="500000" step="10000" class="simulator-slider w-full mt-1">
                     </div>
                     <div>
-                        <label for="price" class="font-medium text-gray-700">Precio por Ticket (en AC)</label>
-                        <input type="number" id="price" value="10" class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500">
+                         <div class="flex justify-between items-center">
+                            <label for="numTickets" class="font-medium text-gray-700">Nº de Tickets Mínimos</label>
+                            <output for="numTickets" id="numTicketsOutput" class="font-bold text-blue-600">200</output>
+                        </div>
+                        <input type="range" id="numTickets" min="50" max="10000" value="200" step="50" class="simulator-slider w-full mt-1">
                     </div>
                     <div>
-                        <label for="prize" class="font-medium text-gray-700">Costo del Premio (en AC)</label>
-                        <input type="number" id="prize" value="150" class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500">
+                         <div class="flex justify-between items-center">
+                            <label for="targetMargin" class="font-medium text-gray-700">Margen Objetivo</label>
+                            <output for="targetMargin" id="targetMarginOutput" class="font-bold text-blue-600">80%</output>
+                        </div>
+                        <input type="range" id="targetMargin" min="50" max="95" value="80" step="1" class="simulator-slider w-full mt-1">
                     </div>
-                    <div class="bg-teal-50 p-4 rounded-lg text-center">
-                        <p class="text-sm text-teal-800">Margen de Ganancia Asegurado</p>
-                        <p id="margin-output" class="text-3xl font-bold text-teal-600">85.00%</p>
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mt-4">
+                        <p class="text-sm text-blue-800">Precio Mínimo por Ticket (calculado)</p>
+                        <p id="ticketPriceOutput" class="text-3xl font-extrabold text-blue-700">$12.500 CLP</p>
                     </div>
                 </div>
                 <div class="chart-container">
-                    <canvas id="profit-chart"></canvas>
+                    <canvas id="simulator-chart"></canvas>
                 </div>
             </div>
         </section>
@@ -161,6 +194,7 @@
     </div>
 
     <script>
+        // --- LÓGICA PARA EL DIAGRAMA DE FLUJO ECONÓMICO ---
         const appData = {
             introduction: {
                 title: 'Bienvenido al Corazón Económico de Astralyxz',
@@ -199,9 +233,6 @@
 
         const detailPanel = document.getElementById('detail-panel');
         const diagramNodes = document.querySelectorAll('.diagram-node');
-        const calculatorInputs = ['tickets', 'price', 'prize'].map(id => document.getElementById(id));
-        const marginOutput = document.getElementById('margin-output');
-        let profitChart;
 
         function updateDetailPanel(targetId) {
             const data = appData[targetId];
@@ -211,7 +242,6 @@
             if (data.points) {
                 pointsHTML = `<ul class="space-y-3 list-inside mt-4">${data.points.map(p => `<li class="flex items-start"><span class="text-teal-500 mr-2 mt-1">▸</span><span>${p}</span></li>`).join('')}</ul>`;
             }
-
             detailPanel.innerHTML = `
                 <div class="detail-panel-content">
                     <h2 class="text-2xl font-bold text-gray-800 mb-2">${data.title}</h2>
@@ -223,84 +253,117 @@
 
         function handleNodeClick(event) {
             const targetId = event.currentTarget.dataset.target;
-            
             diagramNodes.forEach(node => node.classList.remove('active'));
             event.currentTarget.classList.add('active');
-
             updateDetailPanel(targetId);
         }
 
-        function calculateRaffle() {
-            const [tickets, price, prize] = calculatorInputs.map(input => parseFloat(input.value) || 0);
+        // --- LÓGICA PARA EL SIMULADOR DE RENTABILIDAD ---
+        const simulatorSliders = {
+            prizeCost: document.getElementById('prizeCost'),
+            numTickets: document.getElementById('numTickets'),
+            targetMargin: document.getElementById('targetMargin'),
+        };
+        const simulatorOutputs = {
+            prizeCost: document.getElementById('prizeCostOutput'),
+            numTickets: document.getElementById('numTicketsOutput'),
+            targetMargin: document.getElementById('targetMarginOutput'),
+            ticketPrice: document.getElementById('ticketPriceOutput'),
+        };
+        let simulatorChart;
 
-            if (tickets <= 0 || price <= 0) {
-                marginOutput.textContent = 'N/A';
-                updateProfitChart(0, 100);
-                return;
-            }
+        function calculateTicketPrice() {
+            const prizeCost = parseFloat(simulatorSliders.prizeCost.value);
+            const numTickets = parseFloat(simulatorSliders.numTickets.value);
+            const targetMargin = parseFloat(simulatorSliders.targetMargin.value) / 100;
 
-            const revenue = tickets * price;
-            const profit = revenue - prize;
-            const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
-            
-            marginOutput.textContent = `${margin.toFixed(2)}%`;
-            updateProfitChart(prize, profit > 0 ? profit : 0);
-        }
+            simulatorOutputs.prizeCost.textContent = `$${prizeCost.toLocaleString('es-CL')}`;
+            simulatorOutputs.numTickets.textContent = `${numTickets.toLocaleString('es-CL')}`;
+            simulatorOutputs.targetMargin.textContent = `${(targetMargin * 100).toFixed(0)}%`;
 
-        function updateProfitChart(cost, profit) {
-            if (profitChart) {
-                profitChart.data.datasets[0].data = [cost, profit];
-                profitChart.update();
+            if (numTickets > 0 && (1 - targetMargin) > 0) {
+                const minPrice = (prizeCost / numTickets) / (1 - targetMargin);
+                simulatorOutputs.ticketPrice.textContent = `$${minPrice.toLocaleString('es-CL', { maximumFractionDigits: 0 })} CLP`;
+                
+                const totalRevenue = minPrice * numTickets;
+                updateSimulatorChart(prizeCost, totalRevenue);
             }
         }
         
-        function initializeChart() {
-            const ctx = document.getElementById('profit-chart').getContext('2d');
-            profitChart = new Chart(ctx, {
-                type: 'doughnut',
+        function updateSimulatorChart(cost, revenue) {
+            if (simulatorChart) {
+                simulatorChart.data.datasets[0].data[0] = cost;
+                simulatorChart.data.datasets[1].data[0] = revenue;
+                simulatorChart.update();
+            }
+        }
+
+        function initializeSimulator() {
+            const ctx = document.getElementById('simulator-chart').getContext('2d');
+            simulatorChart = new Chart(ctx, {
+                type: 'bar',
                 data: {
-                    labels: ['Costo del Premio (AC)', 'Ganancia Neta (AC)'],
+                    labels: ['Costo vs Ingreso'],
                     datasets: [{
-                        data: [150, 850],
-                        backgroundColor: ['#f59e0b', '#0d9488'],
-                        borderColor: '#f8f9fa',
-                        borderWidth: 4,
-                        hoverOffset: 4
+                        label: 'Costo del Premio (CLP)',
+                        data: [0],
+                        backgroundColor: '#f59e0b',
+                        borderWidth: 1,
+                        borderColor: '#d97706'
+                    }, {
+                        label: 'Ingreso Total (CLP)',
+                        data: [0],
+                        backgroundColor: '#3182ce',
+                        borderWidth: 1,
+                        borderColor: '#2b6cb0'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: '70%',
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Valor en Pesos Chilenos (CLP)'
+                            }
+                        }
+                    },
                     plugins: {
                         legend: {
-                            display: false
+                            position: 'bottom'
                         },
                         tooltip: {
-                            callbacks: {
+                             callbacks: {
                                 label: function(context) {
-                                    return `${context.label}: ${context.raw} AC`;
+                                    return `${context.dataset.label}: $${context.raw.toLocaleString('es-CL')} CLP`;
                                 }
                             }
                         }
                     }
                 }
             });
-            calculateRaffle();
+            
+            Object.values(simulatorSliders).forEach(slider => {
+                slider.addEventListener('input', calculateTicketPrice);
+            });
+            calculateTicketPrice();
         }
 
+        // INICIALIZACIÓN DE TODA LA PÁGINA
         document.addEventListener('DOMContentLoaded', () => {
+            // Inicializar el diagrama de flujo
             diagramNodes.forEach(node => node.addEventListener('click', handleNodeClick));
-            
-            calculatorInputs.forEach(input => input.addEventListener('input', calculateRaffle));
-            
             const firstNode = diagramNodes[0];
-            firstNode.classList.add('active');
-            updateDetailPanel(firstNode.dataset.target);
+            if (firstNode) {
+                firstNode.classList.add('active');
+                updateDetailPanel(firstNode.dataset.target);
+            }
             
-            initializeChart();
+            // Inicializar el simulador
+            initializeSimulator();
         });
-
     </script>
 </body>
 </html>
