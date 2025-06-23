@@ -118,8 +118,12 @@
                             <div class="flex items-center gap-4"><input type="range" id="adv_initialUsers" min="500" max="5000" value="1000" step="100" class="w-full"><span id="adv_initialUsersValue" class="font-bold text-white w-20 text-center"></span></div>
                         </div>
                         <div>
-                            <label for="adv_referralRate" class="block font-medium text-sm text-slate-300">Tasa de Referidos Semanal</label>
+                            <label for="adv_referralRate" class="block font-medium text-sm text-slate-300">Tasa de Referidos Semanal (Viralidad)</label>
                             <div class="flex items-center gap-4"><input type="range" id="adv_referralRate" min="1" max="15" value="5" step="1" class="w-full"><span id="adv_referralRateValue" class="font-bold text-white w-20 text-center"></span></div>
+                        </div>
+                        <div>
+                            <label for="adv_organicGrowth" class="block font-medium text-sm text-slate-300">Crecimiento Orgánico Semanal</label>
+                            <div class="flex items-center gap-4"><input type="range" id="adv_organicGrowth" min="0" max="5" value="1" step="0.5" class="w-full"><span id="adv_organicGrowthValue" class="font-bold text-white w-20 text-center"></span></div>
                         </div>
                         <div>
                             <label for="adv_churnRate" class="block font-medium text-sm text-slate-300">Tasa de Abandono (Churn) Mensual</label>
@@ -286,12 +290,14 @@
                 sliders: {
                     initialUsers: document.getElementById('adv_initialUsers'), referralRate: document.getElementById('adv_referralRate'), churnRate: document.getElementById('adv_churnRate'),
                     weeklySpend: document.getElementById('adv_weeklySpend'), winnerRate: document.getElementById('adv_winnerRate'), avgPrize: document.getElementById('adv_avgPrize'),
-                    marketplaceMargin: document.getElementById('adv_marketplaceMargin'), redemptionRate: document.getElementById('adv_redemptionRate'), opex: document.getElementById('adv_opex')
+                    marketplaceMargin: document.getElementById('adv_marketplaceMargin'), redemptionRate: document.getElementById('adv_redemptionRate'), opex: document.getElementById('adv_opex'),
+                    organicGrowth: document.getElementById('adv_organicGrowth')
                 },
                 values: {
                     initialUsers: document.getElementById('adv_initialUsersValue'), referralRate: document.getElementById('adv_referralRateValue'), churnRate: document.getElementById('adv_churnRateValue'),
                     weeklySpend: document.getElementById('adv_weeklySpendValue'), winnerRate: document.getElementById('adv_winnerRateValue'), avgPrize: document.getElementById('adv_avgPrizeValue'),
-                    marketplaceMargin: document.getElementById('adv_marketplaceMarginValue'), redemptionRate: document.getElementById('adv_redemptionRateValue'), opex: document.getElementById('adv_opexValue')
+                    marketplaceMargin: document.getElementById('adv_marketplaceMarginValue'), redemptionRate: document.getElementById('adv_redemptionRateValue'), opex: document.getElementById('adv_opexValue'),
+                    organicGrowth: document.getElementById('adv_organicGrowthValue')
                 },
                 runButton: document.getElementById('adv_run-simulation'),
                 chart: null,
@@ -312,19 +318,21 @@
                 updateSliderValues() {
                     this.values.initialUsers.textContent = this.formatNumber(this.sliders.initialUsers.value);
                     this.values.referralRate.textContent = `${this.sliders.referralRate.value}%`;
+                    this.values.organicGrowth.textContent = `${this.sliders.organicGrowth.value}%`;
                     this.values.churnRate.textContent = `${this.sliders.churnRate.value}%`;
                     this.values.weeklySpend.textContent = `${this.sliders.weeklySpend.value} AC`;
                     this.values.winnerRate.textContent = `${this.sliders.winnerRate.value}%`;
                     this.values.avgPrize.textContent = `${this.sliders.avgPrize.value} AC`;
                     this.values.marketplaceMargin.textContent = `${this.sliders.marketplaceMargin.value}%`;
                     this.values.redemptionRate.textContent = `${this.sliders.redemptionRate.value}%`;
-                    this.values.opex.textContent = this.formatNumber(this.sliders.opex.value, '$', ' CLP');
+                    this.values.opex.textContent = this.formatNumber(this.sliders.opex.value, '$');
                 },
 
                 run() {
                     const P = {
                         initialUsers: parseInt(this.sliders.initialUsers.value),
                         referralRate: parseInt(this.sliders.referralRate.value) / 100,
+                        organicGrowthRate: parseFloat(this.sliders.organicGrowth.value) / 100,
                         churnRate: parseInt(this.sliders.churnRate.value) / 100,
                         weeklySpendAC: parseInt(this.sliders.weeklySpend.value),
                         winnerRate: parseInt(this.sliders.winnerRate.value) / 100,
@@ -345,11 +353,13 @@
                             currentUsers -= currentUsers * P.churnRate;
                         }
                         const activeUsers = currentUsers;
-                        const newUsers = activeUsers * P.referralRate;
+                        
+                        const referredNewUsers = activeUsers * P.referralRate;
+                        const organicNewUsers = activeUsers * P.organicGrowthRate;
                         
                         const emission_purchases = activeUsers * P.weeklySpendAC;
-                        const emission_referrals = newUsers * 10;
-                        const emission_cashback = (newUsers * P.weeklySpendAC) * P.cashbackRate;
+                        const emission_referrals = referredNewUsers * 10;
+                        const emission_cashback = (referredNewUsers * P.weeklySpendAC) * P.cashbackRate;
                         const emission_total = emission_purchases + emission_referrals + emission_cashback;
 
                         const awardedPrizesAC = (activeUsers * P.winnerRate) * P.avgPrizeAC;
@@ -368,7 +378,7 @@
                             cogsCLP
                         });
                         
-                        currentUsers += newUsers;
+                        currentUsers += (referredNewUsers + organicNewUsers);
                     }
                     
                     let monthlyResults = [], circulatingAC = 0, lastMonthCirculatingAC = 0, treasuryCLP = 0;
