@@ -89,7 +89,7 @@
                             <label for="targetMargin" class="font-medium text-gray-700">Margen Objetivo</label>
                             <output for="targetMargin" id="targetMarginOutput" class="font-bold text-blue-600">80%</output>
                         </div>
-                        <input type="range" id="targetMargin" min="50" max="95" value="80" step="1" class="simulator-slider w-full mt-1">
+                        <input type="range" id="targetMargin" min="50" max="99" value="80" step="1" class="simulator-slider w-full mt-1">
                     </div>
                     <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mt-4">
                         <p class="text-sm text-blue-800">Precio Mínimo por Ticket (calculado)</p>
@@ -119,11 +119,11 @@
                         </div>
                         <div>
                             <label for="adv_referralRate" class="block font-medium text-sm text-slate-300">Tasa de Referidos Semanal</label>
-                            <div class="flex items-center gap-4"><input type="range" id="adv_referralRate" min="1" max="100" value="5" step="1" class="w-full"><span id="adv_referralRateValue" class="font-bold text-white w-20 text-center"></span></div>
+                            <div class="flex items-center gap-4"><input type="range" id="adv_referralRate" min="1" max="15" value="5" step="1" class="w-full"><span id="adv_referralRateValue" class="font-bold text-white w-20 text-center"></span></div>
                         </div>
                         <div>
                             <label for="adv_churnRate" class="block font-medium text-sm text-slate-300">Tasa de Abandono (Churn) Mensual</label>
-                            <div class="flex items-center gap-4"><input type="range" id="adv_churnRate" min="0" max="30" value="5" step="1" class="w-full"><span id="adv_churnRateValue" class="font-bold text-white w-20 text-center"></span></div>
+                            <div class="flex items-center gap-4"><input type="range" id="adv_churnRate" min="0" max="15" value="5" step="1" class="w-full"><span id="adv_churnRateValue" class="font-bold text-white w-20 text-center"></span></div>
                         </div>
                     </div>
                     <!-- Columna Economía -->
@@ -139,7 +139,7 @@
                         </div>
                         <div>
                             <label for="adv_avgPrize" class="block font-medium text-sm text-slate-300">Premio Promedio (AC)</label>
-                            <div class="flex items-center gap-4"><input type="range" id="adv_avgPrize" min="100" max="2000" value="150" step="50" class="w-full"><span id="adv_avgPrizeValue" class="font-bold text-white w-20 text-center"></span></div>
+                            <div class="flex items-center gap-4"><input type="range" id="adv_avgPrize" min="100" max="1000" value="150" step="50" class="w-full"><span id="adv_avgPrizeValue" class="font-bold text-white w-20 text-center"></span></div>
                         </div>
                     </div>
                     <!-- Columna Finanzas -->
@@ -147,7 +147,7 @@
                         <h4 class="font-semibold text-teal-400">Finanzas Reales (CLP)</h4>
                         <div>
                             <label for="adv_marketplaceMargin" class="block font-medium text-sm text-slate-300">Margen del Marketplace</label>
-                            <div class="flex items-center gap-4"><input type="range" id="adv_marketplaceMargin" min="10" max="50" value="30" step="1" class="w-full"><span id="adv_marketplaceMarginValue" class="font-bold text-white w-20 text-center"></span></div>
+                            <div class="flex items-center gap-4"><input type="range" id="adv_marketplaceMargin" min="10" max="99" value="30" step="1" class="w-full"><span id="adv_marketplaceMarginValue" class="font-bold text-white w-20 text-center"></span></div>
                         </div>
                         <div>
                             <label for="adv_redemptionRate" class="block font-medium text-sm text-slate-300">Tasa de Canje de Premios</label>
@@ -263,10 +263,13 @@
                     this.outputs.prizeCost.textContent = `$${pC.toLocaleString('es-CL')}`;
                     this.outputs.numTickets.textContent = nT.toLocaleString('es-CL');
                     this.outputs.targetMargin.textContent = `${(tM * 100).toFixed(0)}%`;
-                    if (nT > 0 && (1 - tM) > 0) {
+                    if (nT > 0 && (1 - tM) > 0.001) {
                         const mP = (pC / nT) / (1 - tM);
                         this.outputs.ticketPrice.textContent = `$${mP.toLocaleString('es-CL', { maximumFractionDigits: 0 })} CLP`;
                         this.updateChart(pC, mP * nT);
+                    } else {
+                         this.outputs.ticketPrice.textContent = `N/A`;
+                         this.updateChart(pC, pC);
                     }
                 },
                 updateChart(cost, revenue) {
@@ -320,7 +323,7 @@
 
                 run() {
                     const P = {
-                        users: parseInt(this.sliders.initialUsers.value),
+                        initialUsers: parseInt(this.sliders.initialUsers.value),
                         referralRate: parseInt(this.sliders.referralRate.value) / 100,
                         churnRate: parseInt(this.sliders.churnRate.value) / 100,
                         weeklySpendAC: parseInt(this.sliders.weeklySpend.value),
@@ -331,12 +334,12 @@
                         opexCLP: parseInt(this.sliders.opex.value),
                         acToCLP: 100,
                         cashbackRate: 0.30,
-                        burnRate: 0.05, // Fixed for simplicity now
+                        burnRate: 0.05,
                         simulationWeeks: 52,
                     };
 
                     let weeklyData = [];
-                    let currentUsers = P.users;
+                    let currentUsers = P.initialUsers;
                     for (let week = 1; week <= P.simulationWeeks; week++) {
                         if (week > 1 && (week - 1) % 4 === 0) {
                             currentUsers -= currentUsers * P.churnRate;
