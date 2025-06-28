@@ -3,490 +3,452 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Simulación de Negocios - Astralyxz</title>
+    <title>Wargame Estratégico - Astralyxz</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <!-- 
-        Chosen Palette: Merged (Strategic Teal & Gold + Corporate Blue & Neutral Gray)
-        Application Structure Plan: This final version evolves the SPA into a complete business modeling wargame. The simulator's logic is now a feedback loop system. The "Banco Central" rules (e.g., inflation targeting) directly affect simulation parameters in subsequent months. The UI reflects this with a new "Diagnóstico del Banco Central" tab and more insightful executive summaries. The parameter controls are now more granular, including demand-side constraints.
-        Visualization & Content Choices: The existing visualizations are preserved. The key addition is a new combo bar/line chart for the financial simulation, showing CLP Income/Costs (bars) against cumulative Treasury (line), providing a complete financial health check at a glance. The executive summary is now far more insightful, offering alerts on both virtual inflation and real-world cash flow risks.
-        CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
-    -->
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: #343a40; }
-        .diagram-node, .tab-button { transition: all 0.3s ease; }
-        .diagram-node:hover, .diagram-node.active { transform: scale(1.05); box-shadow: 0 0 20px rgba(17, 138, 178, 0.4); border-color: #0d9488; cursor:pointer; }
-        .flow-arrow { position: relative; text-align: center; display: flex; align-items: center; justify-content: center; color: #6c757d; }
-        .flow-arrow::after { content: '→'; font-size: 2.5rem; line-height: 1; }
-        @media (max-width: 767px) { .flow-arrow::after { content: '↓'; font-size: 2rem; } }
-        .detail-panel-content, .content-pane.active { animation: fadeIn 0.5s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .chart-container-economy { position: relative; width: 100%; height: 400px; max-height: 50vh; }
-
-        input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: #e2e8f0; border-radius: 5px; outline: none; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #3182ce; cursor: pointer; border-radius: 50%; }
-        input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; background: #3182ce; cursor: pointer; border-radius: 50%; }
-
-        .tab-button { border-radius: 0.5rem; }
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; color: #343a40; }
         .tab-button.active { background-color: #2563eb; color: white; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2), 0 2px 4px -2px rgba(37, 99, 235, 0.1); }
         .content-pane { display: none; }
-        .content-pane.active { display: block; }
+        .content-pane.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .chart-container { position: relative; width: 100%; height: 400px; max-height: 50vh; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #2563eb; cursor: pointer; border-radius: 50%; }
+        .dark input[type="range"] { background: #475569; }
+        .param-section h4 { font-weight: 600; color: #cbd5e1; font-size: 1.1rem; border-bottom: 1px solid #475569; padding-bottom: 0.5rem; margin-bottom: 1rem;}
     </style>
 </head>
 <body class="antialiased">
-    <div class="container mx-auto px-4 py-8 md:py-12">
-        <header class="text-center mb-10 md:mb-12">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-10">
             <h1 class="text-4xl md:text-5xl font-extrabold text-gray-800">TE AMO LARA!!</h1>
-            <p class="text-xl text-teal-700 mt-2 font-medium">Panel de Simulación de Negocios Astralyxz</p>
+            <p class="text-xl text-teal-700 mt-2 font-medium">Wargame de Simulación Estratégica Astralyxz</p>
         </header>
-
-        <section id="economic-flow" class="mb-12">
-            <h2 class="text-2xl font-bold text-center mb-4">Ciclo de Vida de la Moneda</h2>
-            <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Este diagrama representa el flujo de valor de la Astralyxz Coin. Haz clic en cada etapa para entender su rol estratégico en la economía.</p>
-            <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-0">
-                <div data-target="emission" class="diagram-node w-full md:w-1/4 bg-white p-4 rounded-lg shadow-md border-2 border-transparent text-center">
-                    <span class="text-4xl"> 💸 </span><h3 class="font-bold text-lg mt-2">EMISIÓN</h3><p class="text-xs text-gray-500">Creación de Valor</p>
-                </div>
-                <div class="flow-arrow w-full md:w-1/12 h-16 md:h-auto"></div>
-                <div data-target="circulation" class="diagram-node w-full md:w-1/4 bg-white p-4 rounded-lg shadow-md border-2 border-transparent text-center">
-                     <span class="text-4xl"> 🔄 </span><h3 class="font-bold text-lg mt-2">CIRCULACIÓN</h3><p class="text-xs text-gray-500">Gasto y Recirculación</p>
-                </div>
-                 <div class="flow-arrow w-full md:w-1/12 h-16 md:h-auto"></div>
-                <div data-target="control" class="diagram-node w-full md:w-1/4 bg-white p-4 rounded-lg shadow-md border-2 border-transparent text-center">
-                    <span class="text-4xl"> 🛡️ </span><h3 class="font-bold text-lg mt-2">ABSORCIÓN</h3><p class="text-xs text-gray-500">Sumideros de Valor</p>
-                </div>
-            </div>
-        </section>
         
-        <main id="detail-panel" class="min-h-[300px] bg-white/70 p-6 md:p-8 rounded-xl shadow-lg border border-gray-200 mb-12"></main>
-
-        <!-- === INICIO: SIMULADOR DE NEGOCIOS COMPLETO === -->
-        <section id="advanced_simulator_section" class="bg-slate-800 text-white p-6 md:p-8 rounded-xl shadow-2xl mb-12">
-            <h2 class="text-2xl font-bold text-white mb-2 text-center">Panel de Simulación de Negocios (12 Meses)</h2>
-            <p class="text-center text-sm text-slate-400 mb-6 max-w-3xl mx-auto">Esta es la herramienta estratégica principal. Ajusta las palancas de crecimiento, economía y finanzas para modelar el futuro de la empresa, identificar riesgos y validar la sostenibilidad del negocio.</p>
-
+        <section id="advanced_simulator_section" class="bg-slate-800 text-white p-6 md:p-8 rounded-xl shadow-2xl dark">
+            <h2 class="text-3xl font-bold text-white mb-6 text-center">Cuarto de Guerra Estratégico</h2>
             <div class="bg-white/10 rounded-xl shadow-lg p-6 mb-8">
-                <h3 class="text-xl font-bold text-white mb-6 text-center">Palancas de Control Estratégico</h3>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-6">
-                    <div class="space-y-4 lg:border-r lg:border-slate-700 lg:pr-6">
-                        <h4 class="font-semibold text-teal-400">Crecimiento y Comportamiento</h4>
-                        <div>
-                            <label for="adv_initialUsers" class="block font-medium text-sm text-slate-300">Usuarios Iniciales</label>
-                            <div class="flex items-center gap-4"><input type="range" id="adv_initialUsers" min="500" max="5000" value="1000" step="100" class="w-full"><span id="adv_initialUsersValue" class="font-bold text-white w-20 text-center"></span></div>
-                        </div>
-                        <div>
-                            <label for="adv_referralRate" class="block font-medium text-sm text-slate-300">Tasa de Referidos Semanal</label>
-                            <div class="flex items-center gap-4"><input type="range" id="adv_referralRate" min="1" max="15" value="5" step="0.5" class="w-full"><span id="adv_referralRateValue" class="font-bold text-white w-20 text-center"></span></div>
-                        </div>
-                        <div>
-                            <label for="adv_organicGrowth" class="block font-medium text-sm text-slate-300">Crecimiento Orgánico Semanal</label>
-                            <div class="flex items-center gap-4"><input type="range" id="adv_organicGrowth" min="0" max="5" value="1" step="0.5" class="w-full"><span id="adv_organicGrowthValue" class="font-bold text-white w-20 text-center"></span></div>
-                        </div>
-                        <div>
-                            <label for="adv_churnRate" class="block font-medium text-sm text-slate-300">Tasa de Abandono (Churn) Mensual</label>
-                            <div class="flex items-center gap-4"><input type="range" id="adv_churnRate" min="0" max="15" value="5" step="1" class="w-full"><span id="adv_churnRateValue" class="font-bold text-white w-20 text-center"></span></div>
-                        </div>
+                <h3 class="text-xl font-bold text-white mb-6 text-center">Palancas de Mando</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-x-8 gap-y-6">
+                    <!-- Crecimiento -->
+                    <div class="space-y-4 lg:border-r lg:border-slate-700 lg:pr-6 param-section">
+                        <h4>Crecimiento y Adquisición</h4>
+                        <div><label for="initialUsers" class="text-sm">Usuarios Iniciales</label><input type="range" id="initialUsers" min="100" max="5000" value="1000" step="100"><span id="initialUsersValue" class="float-right"></span></div>
+                        <div><label for="marketingBudget" class="text-sm">Inversión Marketing Mensual (CLP)</label><input type="range" id="marketingBudget" min="0" max="10000000" value="1000000" step="250000"><span id="marketingBudgetValue" class="float-right"></span></div>
+                        <div><label for="cpaPaid" class="text-sm">CPA - Marketing Pagado (CLP)</label><input type="range" id="cpaPaid" min="400" max="5000" value="1200"><span id="cpaPaidValue" class="float-right"></span></div>
+                        <div><label for="invitesPerUser" class="text-sm">Invitaciones por Usuario / Mes</label><input type="range" id="invitesPerUser" min="0.1" max="10" step="0.1" value="2"><span id="invitesPerUserValue" class="float-right"></span></div>
+                        <div><label for="conversionRate" class="text-sm">Tasa Conversión Invitados (%)</label><input type="range" id="conversionRate" min="1" max="50" value="15"><span id="conversionRateValue" class="float-right"></span></div>
                     </div>
-                    <div class="space-y-4 lg:border-r lg:border-slate-700 lg:pr-6">
-                        <h4 class="font-semibold text-teal-400">Economía Interna (AC)</h4>
-                        <div>
-                            <label for="adv_weeklySpend" class="block font-medium text-sm text-slate-300">Gasto Semanal / Usuario (AC)</label>
-                            <div class="flex items-center gap-4"><input type="range" id="adv_weeklySpend" min="10" max="100" value="20" step="5" class="w-full"><span id="adv_weeklySpendValue" class="font-bold text-white w-20 text-center"></span></div>
-                        </div>
-                        <div>
-                            <label for="adv_raffleMargin" class="block font-medium text-sm text-slate-300">Margen Objetivo de Rifas</label>
-                             <div class="flex items-center gap-4"><input type="range" id="adv_raffleMargin" min="10" max="90" value="40" step="5" class="w-full"><span id="adv_raffleMarginValue" class="font-bold text-white w-20 text-center"></span></div>
-                        </div>
-                         <div>
-                            <label for="adv_catalogGrowth" class="block font-medium text-sm text-slate-300">Crecimiento del Catálogo Mensual</label>
-                            <div class="flex items-center gap-4"><input type="range" id="adv_catalogGrowth" min="0" max="50" value="10" step="5" class="w-full"><span id="adv_catalogGrowthValue" class="font-bold text-white w-20 text-center"></span></div>
-                        </div>
+                    <!-- Cohortes -->
+                    <div class="space-y-4 lg:border-r lg:border-slate-700 lg:pr-6 param-section">
+                        <h4>Segmentación de Usuarios</h4>
+                        <div><label for="whale_percent" class="text-sm">Ballenas (%)</label><input type="range" id="whale_percent" min="1" max="30" value="5"><span id="whale_percentValue" class="float-right"></span></div>
+                        <div><label for="whale_arpu" class="text-sm">ARPU Ballenas (CLP)</label><input type="range" id="whale_arpu" min="10000" max="100000" value="40000" step="1000"><span id="whale_arpuValue" class="float-right"></span></div>
+                        <div><label for="dolphin_percent" class="text-sm">Delfines (%)</label><input type="range" id="dolphin_percent" min="10" max="80" value="25"><span id="dolphin_percentValue" class="float-right"></span></div>
+                        <div><label for="dolphin_arpu" class="text-sm">ARPU Delfines (CLP)</label><input type="range" id="dolphin_arpu" min="5000" max="40000" value="15000" step="500"><span id="dolphin_arpuValue" class="float-right"></span></div>
+                        <div><label class="text-sm">Pececillos (%)</label><span id="minnow_percentValue" class="float-right font-bold"></span></div>
+                         <div><label for="minnow_arpu" class="text-sm">ARPU Pececillos (CLP)</label><input type="range" id="minnow_arpu" min="1000" max="10000" value="3000" step="500"><span id="minnow_arpuValue" class="float-right"></span></div>
                     </div>
-                    <div class="space-y-4">
-                        <h4 class="font-semibold text-teal-400">Finanzas Reales (CLP)</h4>
-                        <div>
-                            <label for="adv_marketplaceMargin" class="block font-medium text-sm text-slate-300">Margen del Marketplace</label>
-                            <div class="flex items-center gap-4"><input type="range" id="adv_marketplaceMargin" min="10" max="50" value="30" step="1" class="w-full"><span id="adv_marketplaceMarginValue" class="font-bold text-white w-20 text-center"></span></div>
-                        </div>
-                        <div>
-                            <label for="adv_redemptionRate" class="block font-medium text-sm text-slate-300">Tasa de Canje de Premios</label>
-                            <div class="flex items-center gap-4"><input type="range" id="adv_redemptionRate" min="50" max="100" value="85" step="1" class="w-full"><span id="adv_redemptionRateValue" class="font-bold text-white w-20 text-center"></span></div>
-                        </div>
-                        <div>
-                            <label for="adv_opex" class="block font-medium text-sm text-slate-300">Costos Operativos Mensuales (CLP)</label>
-                            <div class="flex items-center gap-4"><input type="range" id="adv_opex" min="0" max="5000000" value="500000" step="100000" class="w-full"><span id="adv_opexValue" class="font-bold text-white w-28 text-center"></span></div>
-                        </div>
+                    <!-- Finanzas -->
+                    <div class="space-y-4 lg:border-r lg:border-slate-700 lg:pr-6 param-section">
+                        <h4>Finanzas y Operaciones</h4>
+                        <div><label for="opex" class="text-sm">Costos Operativos Mensuales (CLP)</label><input type="range" id="opex" min="500000" max="20000000" value="2000000" step="250000"><span id="opexValue" class="float-right"></span></div>
+                        <div><label for="raffleMargin" class="text-sm">Margen Objetivo de Rifas (%)</label><input type="range" id="raffleMargin" min="20" max="95" value="85"><span id="raffleMarginValue" class="float-right"></span></div>
+                        <div><label for="marketplaceMargin" class="text-sm">Margen del Marketplace (%)</label><input type="range" id="marketplaceMargin" min="10" max="60" value="35"><span id="marketplaceMarginValue" class="float-right"></span></div>
+                        <div><label for="redemptionRate" class="text-sm">Tasa de Canje de Premios (%)</label><input type="range" id="redemptionRate" min="50" max="100" value="80"><span id="redemptionRateValue" class="float-right"></span></div>
+                        <div><label for="churnRate" class="text-sm">Tasa de Abandono Mensual (%)</label><input type="range" id="churnRate" min="1" max="40" value="10"><span id="churnRateValue" class="float-right"></span></div>
+                    </div>
+                    <!-- Banco Central -->
+                    <div class="space-y-4 param-section">
+                        <h4>Gobernanza Económica</h4>
+                        <div class="flex items-center justify-between"><label for="governor_enabled" class="text-sm">Activar Banco Central</label><input type="checkbox" id="governor_enabled" class="form-checkbox h-5 w-5 text-blue-600 rounded" checked></div>
+                        <div><label for="inflation_target" class="text-sm">Inflación Objetivo Mensual (%)</label><input type="range" id="inflation_target" min="2" max="25" value="8"><span id="inflation_targetValue" class="float-right"></span></div>
+                        <div><label for="seguroRate" class="text-sm">Tasa Adopción "Seguro" (%)</label><input type="range" id="seguroRate" min="0" max="60" value="15"><span id="seguroRateValue" class="float-right"></span></div>
+                         <div><label for="simulationMonths" class="text-sm">Meses a Simular</label><input type="range" id="simulationMonths" min="12" max="48" value="12"><span id="simulationMonthsValue" class="float-right"></span></div>
                     </div>
                 </div>
-                <div class="text-center mt-8">
-                     <button id="adv_run-simulation" class="bg-blue-600 text-white font-bold py-3 px-10 rounded-lg hover:bg-blue-700 transition-transform transform hover:scale-105">Ejecutar Simulación</button>
-                </div>
+                <div class="text-center mt-8"><button id="run-simulation" class="bg-blue-600 text-white font-bold py-3 px-10 rounded-lg hover:bg-blue-700 transition-transform transform hover:scale-105">Ejecutar Simulación</button></div>
             </div>
 
             <div class="bg-slate-900/50 rounded-xl shadow-lg p-4 sm:p-6">
                 <div class="border-b border-slate-700 pb-2">
                     <nav class="flex flex-wrap -mb-px" aria-label="Tabs">
-                        <button class="tab-button active py-3 px-4 font-medium text-sm" data-tab="adv_summary">Resumen Ejecutivo</button>
-                        <button class="tab-button text-slate-300 hover:bg-slate-700/50 py-3 px-4 font-medium text-sm" data-tab="adv_banco_central">Diagnóstico del Banco Central</button>
-                        <button class="tab-button text-slate-300 hover:bg-slate-700/50 py-3 px-4 font-medium text-sm" data-tab="adv_ac_economy">Economía AC</button>
-                        <button class="tab-button text-slate-300 hover:bg-slate-700/50 py-3 px-4 font-medium text-sm" data-tab="adv_finance">Finanzas CLP</button>
+                        <button class="tab-button active py-3 px-4 font-medium text-sm" data-tab="summary">Resumen Ejecutivo</button>
+                        <button class="tab-button text-slate-300 hover:bg-slate-700/50 py-3 px-4 font-medium text-sm" data-tab="banco_central">Gobernanza</button>
+                        <button class="tab-button text-slate-300 hover:bg-slate-700/50 py-3 px-4 font-medium text-sm" data-tab="users">Usuarios</button>
+                         <button class="tab-button text-slate-300 hover:bg-slate-700/50 py-3 px-4 font-medium text-sm" data-tab="cohorts">Cohortes</button>
+                        <button class="tab-button text-slate-300 hover:bg-slate-700/50 py-3 px-4 font-medium text-sm" data-tab="ac_economy">Economía AC</button>
+                        <button class="tab-button text-slate-300 hover:bg-slate-700/50 py-3 px-4 font-medium text-sm" data-tab="marketplace">Marketplace</button>
+                        <button class="tab-button text-slate-300 hover:bg-slate-700/50 py-3 px-4 font-medium text-sm" data-tab="finance">Finanzas CLP</button>
                     </nav>
                 </div>
-
                 <div class="pt-6">
-                    <div id="adv_summary" class="content-pane active"></div>
-                    <div id="adv_banco_central" class="content-pane"></div>
-                    <div id="adv_ac_economy" class="content-pane"></div>
-                    <div id="adv_finance" class="content-pane"></div>
+                    <div id="summary" class="content-pane active"></div>
+                    <div id="banco_central" class="content-pane"></div>
+                    <div id="users" class="content-pane"></div>
+                    <div id="cohorts" class="content-pane"></div>
+                    <div id="ac_economy" class="content-pane"></div>
+                    <div id="marketplace" class="content-pane"></div>
+                    <div id="finance" class="content-pane"></div>
                 </div>
             </div>
         </section>
-        <!-- === FIN: SIMULADOR DE NEGOCIOS COMPLETO === -->
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- LÓGICA DEL DIAGRAMA DE FLUJO ---
-            const diagramLogic = {
-                appData: {
-                    emission: { 
-                        title: 'Emisión: Cómo se Crean las Monedas', 
-                        content: 'La creación de AC (emisión) es el punto de partida. Está diseñada para ser endógena, es decir, cada nueva moneda se crea como resultado de una acción que aporta valor directo al negocio, ya sea a través de ingresos reales o de crecimiento de usuarios.',
-                        points: ['<strong>Compra Directa:</strong> Es la fuente primaria y más saludable. Un usuario paga CLP y recibe AC. Esto respalda la economía con capital real y es el principal generador de ingresos.','<strong>Recompensas por Crecimiento:</strong> Emitir AC por referidos o cashback es una inversión. En lugar de gastar CLP en marketing, la empresa "imprime" su propia moneda para pagar la adquisición de nuevos clientes, un costo de marketing controlado y eficiente.'] 
+    document.addEventListener('DOMContentLoaded', () => {
+        const businessSimulator = {
+            charts: {},
+            init() {
+                this.setupSliders();
+                this.setupTabs();
+                document.getElementById('run-simulation').addEventListener('click', () => this.run());
+                this.run();
+            },
+            setupSliders() {
+                this.sliders = {
+                    initialUsers: document.getElementById('initialUsers'), marketingBudget: document.getElementById('marketingBudget'), cpaPaid: document.getElementById('cpaPaid'), invitesPerUser: document.getElementById('invitesPerUser'), conversionRate: document.getElementById('conversionRate'),
+                    whale_percent: document.getElementById('whale_percent'), whale_arpu: document.getElementById('whale_arpu'), dolphin_percent: document.getElementById('dolphin_percent'), dolphin_arpu: document.getElementById('dolphin_arpu'), minnow_arpu: document.getElementById('minnow_arpu'),
+                    opex: document.getElementById('opex'), raffleMargin: document.getElementById('raffleMargin'), marketplaceMargin: document.getElementById('marketplaceMargin'), redemptionRate: document.getElementById('redemptionRate'), churnRate: document.getElementById('churnRate'),
+                    governor_enabled: document.getElementById('governor_enabled'), inflation_target: document.getElementById('inflation_target'), seguroRate: document.getElementById('seguroRate'), simulationMonths: document.getElementById('simulationMonths')
+                };
+                Object.values(this.sliders).forEach(slider => {
+                    if(slider.type === 'range') slider.addEventListener('input', () => this.updateSliderDisplay());
+                });
+                this.updateSliderDisplay();
+            },
+            updateSliderDisplay() {
+                Object.entries(this.sliders).forEach(([key, slider]) => {
+                    if (slider.type !== 'range') return;
+                    const display = document.getElementById(`${key}Value`);
+                    let value = parseFloat(slider.value);
+                    let text = this.formatNumber(value);
+
+                    const whalePercent = parseFloat(this.sliders.whale_percent.value);
+                    const dolphinPercent = parseFloat(this.sliders.dolphin_percent.value);
+                    const minnowPercent = 100 - whalePercent - dolphinPercent;
+                    if(document.getElementById('minnow_percentValue')) document.getElementById('minnow_percentValue').textContent = `${minnowPercent.toFixed(0)}%`;
+
+
+                    if (['marketingBudget', 'cpaPaid', 'whale_arpu', 'dolphin_arpu', 'minnow_arpu', 'opex'].includes(key)) text = this.formatNumber(value, '$');
+                    if (['conversionRate', 'churnRate', 'seguroRate', 'raffleMargin', 'marketplaceMargin', 'redemptionRate', 'whale_percent', 'dolphin_percent', 'inflation_target'].includes(key)) text = `${value}%`;
+                    if (key === 'invitesPerUser') text = value.toFixed(1);
+                    display.textContent = text;
+                });
+            },
+            formatNumber: (num, prefix = '', suffix = '') => `${prefix}${new Intl.NumberFormat('es-CL').format(Math.round(num))}${suffix}`,
+            
+            run() {
+                // --- SETUP PARAMS ---
+                const P = {
+                    initialUsers: parseInt(this.sliders.initialUsers.value),
+                    marketingBudget: parseInt(this.sliders.marketingBudget.value),
+                    cpaPaid: parseInt(this.sliders.cpaPaid.value),
+                    invitesPerUser: parseFloat(this.sliders.invitesPerUser.value),
+                    conversionRate: parseFloat(this.sliders.conversionRate.value) / 100,
+                    churnRate: parseFloat(this.sliders.churnRate.value) / 100,
+                    seguroRate: parseFloat(this.sliders.seguroRate.value) / 100,
+                    raffleMargin: parseFloat(this.sliders.raffleMargin.value) / 100,
+                    marketplaceMargin: parseFloat(this.sliders.marketplaceMargin.value) / 100,
+                    redemptionRate: parseFloat(this.sliders.redemptionRate.value) / 100,
+                    opex: parseInt(this.sliders.opex.value),
+                    simulationMonths: parseInt(this.sliders.simulationMonths.value),
+                    governor_enabled: this.sliders.governor_enabled.checked,
+                    inflation_target: parseFloat(this.sliders.inflation_target.value) / 100,
+                    cohorts: {
+                        whale: { pct: parseFloat(this.sliders.whale_percent.value) / 100, arpu: parseInt(this.sliders.whale_arpu.value) },
+                        dolphin: { pct: parseFloat(this.sliders.dolphin_percent.value) / 100, arpu: parseInt(this.sliders.dolphin_arpu.value) },
+                        minnow: { pct: (100 - parseFloat(this.sliders.whale_percent.value) - parseFloat(this.sliders.dolphin_percent.value)) / 100, arpu: parseInt(this.sliders.minnow_arpu.value) }
                     },
-                    circulation: { 
-                        title: 'Circulación: El Motor de la Actividad', 
-                        content: 'Una vez emitidos, los AC deben circular. El motor principal de esta circulación es el gasto de los usuarios en los tickets de las rifas. Este flujo constante es vital para mantener a los usuarios comprometidos y la economía activa.',
-                        points: ['<strong>Gasto en Rifas:</strong> Es el desagüe principal y la pieza central del modelo. Los usuarios usan los AC que compraron para participar, retirando esa moneda del circulante y moviéndola hacia el pozo de la rifa.','<strong>Pozo de la Rifa (Tesorería Virtual):</strong> Los AC gastados en tickets se acumulan aquí. Al finalizar la rifa, una parte se entrega como premio (recirculación) y la otra es la ganancia de la empresa en AC.','<strong>Recirculación de Premios:</strong> Los ganadores reciben sus premios en AC, reinyectando una cantidad controlada de moneda en el sistema, lo que les permite participar en el siguiente paso: la absorción.'] 
-                    },
-                    control: { 
-                        title: 'Absorción: El Sumidero Final de Valor', 
-                        content: 'La absorción es el proceso de retirar permanentemente los AC del ecosistema. Esto es crucial para controlar la inflación y dar un propósito final a la moneda. Se logra principalmente a través del gasto de los premios en el marketplace.',
-                        points: ['<strong>Marketplace como Sumidero:</strong> Es el mecanismo final. Los ganadores usan sus AC para "comprar" productos. Una vez gastados aquí, esos AC son absorbidos por la empresa y salen de circulación para siempre.','<strong>Finanzas Reales y Costos:</strong> Por cada producto canjeado, la empresa tiene un costo real en CLP que debe pagar al proveedor de dropshipping. La diferencia entre el valor del producto en AC y este costo real es el margen de ganancia final del ciclo.','<strong>Bienes Virtuales (Absorción Pura):</strong> Vender ítems cosméticos o de estatus por AC es una forma de absorción sin costo real, lo que representa un 100% de margen y una poderosa herramienta de control económico.'] 
+                    seguroPrice: 990, acToCLP: 100, cashbackRate: 0.30, 
+                    baseReferralCostAC: 5, baseReferredBonusAC: 5
+                };
+                P.kFactor = P.invitesPerUser * P.conversionRate;
+                P.avgArpu = (P.cohorts.whale.pct * P.cohorts.whale.arpu) + (P.cohorts.dolphin.pct * P.cohorts.dolphin.arpu) + (P.cohorts.minnow.pct * P.cohorts.minnow.arpu);
+
+                // --- SIMULATION ENGINE ---
+                let monthlyResults = [];
+                let activeUsers = P.initialUsers;
+                let circulatingAC = P.initialUsers * 20; // Avg starting balance
+                let treasuryCLP = 0;
+                let governorLog = [];
+                let currentReferralBonus = P.baseReferredBonusAC;
+
+                for (let m = 1; m <= P.simulationMonths; m++) {
+                    const startOfMonthUsers = activeUsers;
+                    
+                    // Governance Check
+                    if (P.governor_enabled && m > 1) {
+                        const lastMonthInflation = monthlyResults[m-2].inflation;
+                        if (lastMonthInflation > P.inflation_target * 100) {
+                            currentReferralBonus = Math.max(1, currentReferralBonus * 0.9); // Reduce bonus by 10%
+                            governorLog.push({month: m, action: `Inflación ${lastMonthInflation.toFixed(1)}% > ${P.inflation_target*100}%. Bonus de referido reducido a ${currentReferralBonus.toFixed(1)} AC.`});
+                        } else {
+                            currentReferralBonus = Math.min(P.baseReferredBonusAC, currentReferralBonus * 1.05); // Slowly restore bonus
+                        }
                     }
-                },
-                detailPanel: document.getElementById('detail-panel'),
-                diagramNodes: document.querySelectorAll('.diagram-node'),
-                init() {
-                    this.diagramNodes.forEach(node => node.addEventListener('click', (e) => this.handleNodeClick(e)));
-                    const firstNode = this.diagramNodes[0];
-                    if (firstNode) {
-                        firstNode.classList.add('active');
-                        this.updateDetailPanel(firstNode.dataset.target);
-                    }
-                },
-                updateDetailPanel(targetId) {
-                    const data = this.appData[targetId];
-                    if (!data) return;
-                    const pointsHTML = data.points ? `<ul class="space-y-3 list-inside mt-4">${data.points.map(p => `<li class="flex items-start"><span class="text-teal-500 mr-2 mt-1">▸</span><span>${p}</span></li>`).join('')}</ul>` : '';
-                    this.detailPanel.innerHTML = `<div class="detail-panel-content"><h2 class="text-2xl font-bold text-gray-800 mb-2">${data.title}</h2><p class="text-gray-600 leading-relaxed">${data.content}</p>${pointsHTML}</div>`;
-                },
-                handleNodeClick(event) {
-                    const targetId = event.currentTarget.dataset.target;
-                    this.diagramNodes.forEach(node => node.classList.remove('active'));
-                    event.currentTarget.classList.add('active');
-                    this.updateDetailPanel(targetId);
+
+                    // User Flow
+                    const usersLostToChurn = activeUsers * P.churnRate;
+                    const newPaidUsers = P.marketingBudget > 0 ? P.marketingBudget / P.cpaPaid : 0;
+                    const newViralUsers = activeUsers * P.kFactor;
+                    
+                    // Financials
+                    const costReferralsCLP = newViralUsers * (P.baseReferralCostAC + currentReferralBonus) * P.acToCLP;
+                    const totalAcquisitionCosts = P.marketingBudget + costReferralsCLP;
+                    
+                    const revenueCoinsCLP = activeUsers * P.avgArpu;
+                    const revenueSeguroCLP = activeUsers * P.seguroRate * P.seguroPrice;
+                    const totalRevenueCLP = revenueCoinsCLP + revenueSeguroCLP;
+                    
+                    // AC Economy
+                    const acIssuedPurchases = revenueCoinsCLP / P.acToCLP;
+                    const acSpentInRaffles = (activeUsers * P.avgArpu) / P.acToCLP;
+                    const acIssuedCashback = acSpentInRaffles * P.cashbackRate;
+                    const acIssuedReferrals = newViralUsers * (P.baseReferralCostAC + currentReferralBonus);
+                    const totalEmitted = acIssuedPurchases + acIssuedCashback + acIssuedReferrals;
+
+                    const acPrizePool = acSpentInRaffles * (1 - P.raffleMargin);
+                    const acRedeemedFromPrizes = acPrizePool * P.redemptionRate;
+                    
+                    const cogsMarketplaceCLP = acRedeemedFromPrizes * P.acToCLP * (1 - P.marketplaceMargin);
+                    const finalTotalCosts = totalAcquisitionCosts + P.opex + cogsMarketplaceCLP;
+                    const netProfitCLP = totalRevenueCLP - finalTotalCosts;
+                    treasuryCLP += netProfitCLP;
+                    
+                    const lastCirculatingAC = circulatingAC;
+                    circulatingAC += totalEmitted - acSpentInRaffles;
+                    const inflation = lastCirculatingAC > 0 ? (circulatingAC - lastCirculatingAC) / lastCirculatingAC * 100 : 0;
+                    
+                    activeUsers += newPaidUsers + newViralUsers - usersLostToChurn;
+                    if (activeUsers < 1) activeUsers = 1;
+
+                    monthlyResults.push({
+                        month: m, startUsers: startOfMonthUsers, newPaid: newPaidUsers, newViral: newViralUsers, lostChurn: usersLostToChurn, endUsers: activeUsers,
+                        emitted: totalEmitted, spent: acSpentInRaffles, absorbed: acRedeemedFromPrizes, circulating: circulatingAC, inflation,
+                        incomeCLP: totalRevenueCLP, costsCLP: finalTotalCosts, netProfitCLP, treasuryCLP,
+                        marketplaceRevenueCLP: acRedeemedFromPrizes * P.acToCLP, marketplaceCogsCLP: cogsMarketplaceCLP, marketplaceProfitCLP: (acRedeemedFromPrizes * P.acToCLP) - cogsMarketplaceCLP,
+                        cohorts: {
+                            whale: {count: activeUsers * P.cohorts.whale.pct, revenue: activeUsers * P.cohorts.whale.pct * P.cohorts.whale.arpu},
+                            dolphin: {count: activeUsers * P.cohorts.dolphin.pct, revenue: activeUsers * P.cohorts.dolphin.pct * P.cohorts.dolphin.arpu},
+                            minnow: {count: activeUsers * P.cohorts.minnow.pct, revenue: activeUsers * P.cohorts.minnow.pct * P.cohorts.minnow.arpu},
+                        }
+                    });
                 }
-            };
-            diagramLogic.init();
+                this.updateUI(monthlyResults, governorLog, P);
+            },
+            
+            // --- UI UPDATE FUNCTIONS ---
+            updateUI(results, governorLog, params) {
+                this.updateSummary(results);
+                this.updateBancoCentral(results, governorLog);
+                this.updateUsers(results);
+                this.updateCohorts(results, params);
+                this.updateAcEconomy(results);
+                this.updateMarketplace(results);
+                this.updateFinance(results);
+            },
+            updateSummary(results) { /* ... same as before ... */ 
+                const final = results[results.length - 1];
+                const inflationAlerts = results.filter(r => r.inflation > 25);
+                const cashflowAlerts = results.filter(r => r.netProfitCLP < 0);
+                const treasuryAlert = final.treasuryCLP < 0;
 
-            // --- LÓGICA DEL SIMULADOR DE NEGOCIOS COMPLETO ---
-            const businessSimulator = {
-                sliders: {
-                    initialUsers: document.getElementById('adv_initialUsers'), referralRate: document.getElementById('adv_referralRate'), organicGrowth: document.getElementById('adv_organicGrowth'), churnRate: document.getElementById('adv_churnRate'),
-                    weeklySpend: document.getElementById('adv_weeklySpend'), raffleMargin: document.getElementById('adv_raffleMargin'), catalogGrowth: document.getElementById('adv_catalogGrowth'),
-                    marketplaceMargin: document.getElementById('adv_marketplaceMargin'), redemptionRate: document.getElementById('adv_redemptionRate'), opex: document.getElementById('adv_opex')
-                },
-                values: {
-                    initialUsers: document.getElementById('adv_initialUsersValue'), referralRate: document.getElementById('adv_referralRateValue'), organicGrowth: document.getElementById('adv_organicGrowthValue'), churnRate: document.getElementById('adv_churnRateValue'),
-                    weeklySpend: document.getElementById('adv_weeklySpendValue'), raffleMargin: document.getElementById('adv_raffleMarginValue'), catalogGrowth: document.getElementById('adv_catalogGrowthValue'),
-                    marketplaceMargin: document.getElementById('adv_marketplaceMarginValue'), redemptionRate: document.getElementById('adv_redemptionRateValue'), opex: document.getElementById('adv_opexValue')
-                },
-                runButton: document.getElementById('adv_run-simulation'),
-                acChart: null,
-                financeChart: null,
+                let html = `<div class="p-4 bg-slate-800/50 rounded-lg"><h4 class="font-semibold text-slate-200">Resultados Clave (Mes ${results.length})</h4><div class="mt-2 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <p><strong>Usuarios Finales:</strong> ${this.formatNumber(final.endUsers)}</p>
+                    <p><strong>AC Circulantes:</strong> ${this.formatNumber(final.circulating)}</p>
+                    <p><strong>Ganancia Neta (Mes Final):</strong> <span class="${final.netProfitCLP < 0 ? 'text-red-400' : 'text-green-400'}">${this.formatNumber(final.netProfitCLP, '$')}</span></p>
+                    <p><strong>Tesorería Acumulada:</strong> <span class="${final.treasuryCLP < 0 ? 'text-red-400' : 'text-green-400'}">${this.formatNumber(final.treasuryCLP, '$')}</span></p>
+                </div></div>`;
+                if (inflationAlerts.length > 0) {
+                    html += `<div class="mt-4 p-4 bg-amber-900/50 border-l-4 border-amber-500 rounded-r-lg"><h4 class="font-semibold text-amber-300">⚠️ Alerta de Inflación</h4><p class="text-sm text-amber-400 mt-1">La masa monetaria creció sobre 25% en los meses: <strong>${inflationAlerts.map(a => a.month).join(', ')}</strong>.</p></div>`;
+                }
+                if (cashflowAlerts.length > 0) {
+                     html += `<div class="mt-4 p-4 bg-red-900/50 border-l-4 border-red-500 rounded-r-lg"><h4 class="font-semibold text-red-300">🚨 Alerta de Flujo de Caja</h4><p class="text-sm text-red-400 mt-1">El negocio tuvo flujo de caja negativo en los meses: <strong>${cashflowAlerts.map(a => a.month).join(', ')}</strong>.</p></div>`;
+                }
+                if(treasuryAlert) {
+                     html += `<div class="mt-4 p-4 bg-red-900/50 border-l-4 border-red-500 rounded-r-lg"><h4 class="font-semibold text-red-300">🚨 ALERTA MÁXIMA: QUIEBRA</h4><p class="text-sm text-red-400 mt-1">La tesorería es negativa. El modelo de negocio no es sostenible bajo estos parámetros.</p></div>`;
+                }
+                if (inflationAlerts.length === 0 && cashflowAlerts.length === 0 && !treasuryAlert) {
+                     html += `<div class="mt-4 p-4 bg-green-900/50 border-l-4 border-green-500 rounded-r-lg"><h4 class="font-semibold text-green-300">✅ Modelo Sostenible</h4><p class="text-sm text-green-400 mt-1">La economía y las finanzas son estables y rentables.</p></div>`;
+                }
+                document.getElementById('summary').innerHTML = html;
+            },
+            updateBancoCentral(results, governorLog) {
+                 const avgInflation = results.reduce((acc, r) => acc + r.inflation, 0) / results.length;
+                 const velocity = results.reduce((acc, r) => acc + r.spent, 0) / results.reduce((acc, r) => acc + r.circulating, 0);
+                 const absorptionRatio = (results.reduce((a,r)=>a+r.absorbed,0) / results.reduce((a,r)=>a+r.emitted,0) * 100 || 0);
+                 let logHtml = governorLog.length > 0 ? governorLog.map(l => `<li class="text-xs"><strong>Mes ${l.month}:</strong> ${l.action}</li>`).join('') : '<li class="text-xs text-slate-400">No se requirieron intervenciones.</li>';
 
-                init() {
-                    this.setupTabs();
-                    Object.keys(this.sliders).forEach(key => {
-                        if (this.sliders[key]) {
-                            this.sliders[key].addEventListener('input', () => this.updateSliderValues());
-                        }
-                    });
-                    this.runButton.addEventListener('click', () => this.run());
-                    this.updateSliderValues();
-                    this.run();
-                },
-                
-                formatNumber(num, prefix = '', suffix = '') {
-                    return `${prefix}${new Intl.NumberFormat('es-CL').format(Math.round(num))}${suffix}`;
-                },
-                
-                updateSliderValues() {
-                    this.values.initialUsers.textContent = this.formatNumber(this.sliders.initialUsers.value);
-                    this.values.referralRate.textContent = `${this.sliders.referralRate.value}%`;
-                    this.values.organicGrowth.textContent = `${this.sliders.organicGrowth.value}%`;
-                    this.values.churnRate.textContent = `${this.sliders.churnRate.value}%`;
-                    this.values.weeklySpend.textContent = `${this.sliders.weeklySpend.value} AC`;
-                    this.values.raffleMargin.textContent = `${this.sliders.raffleMargin.value}%`;
-                    this.values.catalogGrowth.textContent = `${this.sliders.catalogGrowth.value}%`;
-                    this.values.marketplaceMargin.textContent = `${this.sliders.marketplaceMargin.value}%`;
-                    this.values.redemptionRate.textContent = `${this.sliders.redemptionRate.value}%`;
-                    this.values.opex.textContent = this.formatNumber(this.sliders.opex.value, '$');
-                },
-
-                run() {
-                    const P = {
-                        initialUsers: parseInt(this.sliders.initialUsers.value),
-                        referralRate: parseFloat(this.sliders.referralRate.value) / 100,
-                        organicGrowthRate: parseFloat(this.sliders.organicGrowth.value) / 100,
-                        churnRate: parseFloat(this.sliders.churnRate.value) / 100,
-                        weeklySpendAC: parseInt(this.sliders.weeklySpend.value),
-                        raffleMargin: parseFloat(this.sliders.raffleMargin.value) / 100,
-                        redemptionRate: parseFloat(this.sliders.redemptionRate.value) / 100,
-                        marketplaceMargin: parseFloat(this.sliders.marketplaceMargin.value) / 100,
-                        opexCLP: parseInt(this.sliders.opex.value),
-                        acToCLP: 100,
-                        cashbackRate: 0.30,
-                        simulationWeeks: 52,
-                    };
-
-                    let weeklyData = [];
-                    let currentUsers = P.initialUsers;
-                    
-                    for (let week = 1; week <= P.simulationWeeks; week++) {
-                        if (week > 1 && (week - 1) % 4 === 0) {
-                            currentUsers -= currentUsers * P.churnRate;
-                        }
-                        const activeUsers = currentUsers;
-                        
-                        const referredNewUsers = activeUsers * P.referralRate;
-                        const organicNewUsers = activeUsers * P.organicGrowthRate;
-                        
-                        const emission_purchases = activeUsers * P.weeklySpendAC;
-                        const emission_referrals = referredNewUsers * 10;
-                        const emission_cashback = (referredNewUsers * P.weeklySpendAC) * P.cashbackRate;
-                        const total_emission = emission_purchases + emission_referrals + emission_cashback;
-
-                        const total_spent_in_raffles = activeUsers * P.weeklySpendAC;
-                        const total_prize_pool_AC = total_spent_in_raffles * (1 - P.raffleMargin);
-                        const prizes_awarded_AC = total_prize_pool_AC;
-
-                        const redeemed_prizes_AC = prizes_awarded_AC * P.redemptionRate;
-                        const total_absorption = redeemed_prizes_AC;
-
-                        const incomeCLP = emission_purchases * P.acToCLP;
-                        const cogsCLP = redeemed_prizes_AC * P.acToCLP * (1 - P.marketplaceMargin);
-                        
-                        weeklyData.push({
-                            users: currentUsers,
-                            total_emission,
-                            total_spent_in_raffles,
-                            prizes_awarded_AC,
-                            total_absorption,
-                            incomeCLP,
-                            cogsCLP
-                        });
-                        
-                        currentUsers += (referredNewUsers + organicNewUsers);
-                    }
-                    
-                    let monthlyResults = [], circulatingAC = 0, lastMonthCirculatingAC = 0, treasuryCLP = 0;
-                    
-                    for (let m = 1; m <= 12; m++) {
-                        const monthWeeks = weeklyData.slice((m - 1) * 4, m * 4);
-                        if (monthWeeks.length === 0) continue;
-
-                        const monthEndUsers = monthWeeks[monthWeeks.length - 1].users;
-                        const monthEmission = monthWeeks.reduce((s, w) => s + w.total_emission, 0);
-                        const monthSpentInRaffles = monthWeeks.reduce((s, w) => s + w.total_spent_in_raffles, 0);
-                        const monthPrizesAwarded = monthWeeks.reduce((s,w) => s+w.prizes_awarded_AC, 0);
-                        const monthAbsorption = monthWeeks.reduce((s, w) => s + w.total_absorption, 0);
-                        
-                        circulatingAC += monthEmission - monthSpentInRaffles + monthPrizesAwarded - monthAbsorption;
-                        circulatingAC = Math.max(0, circulatingAC);
-
-                        const inflation = lastMonthCirculatingAC > 0 ? ((circulatingAC - lastMonthCirculatingAC) / lastMonthCirculatingAC) * 100 : 0;
-                        
-                        const monthIncomeCLP = monthWeeks.reduce((s, w) => s + w.incomeCLP, 0);
-                        const monthCogsCLP = monthWeeks.reduce((s, w) => s + w.cogsCLP, 0);
-                        const monthCostsCLP = monthCogsCLP + P.opexCLP;
-                        const monthNetProfitCLP = monthIncomeCLP - monthCostsCLP;
-                        treasuryCLP += monthNetProfitCLP;
-                        
-                        monthlyResults.push({
-                            month: m, users: monthEndUsers, emitted: monthEmission, spent: monthSpentInRaffles, awarded: monthPrizesAwarded, absorbed: monthAbsorption,
-                            circulating: circulatingAC, inflation, 
-                            incomeCLP: monthIncomeCLP, costsCLP: monthCostsCLP, netProfitCLP: monthNetProfitCLP, treasuryCLP,
-                        });
-                        
-                        lastMonthCirculatingAC = circulatingAC;
-                    }
-                    
-                    this.updateUI(monthlyResults);
-                },
-
-                updateUI(results) {
-                    this.updateSummary(results);
-                    this.updateBancoCentral(results);
-                    this.updateAcEconomy(results);
-                    this.updateFinance(results);
-                },
-                
-                updateSummary(results) {
-                    const final = results[results.length - 1];
-                    const inflationAlerts = results.filter(r => r.inflation > 50);
-                    const cashflowAlerts = results.filter(r => r.netProfitCLP < 0);
-                    
-                    let html = `<div class="p-4 bg-slate-800/50 rounded-lg"><h4 class="font-semibold text-slate-200">Resultados Clave (Mes 12)</h4><div class="mt-2 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <p><strong>Usuarios:</strong> ${this.formatNumber(final.users)}</p>
-                        <p><strong>AC Circulantes:</strong> ${this.formatNumber(final.circulating)}</p>
-                        <p><strong>Ganancia Neta Mensual:</strong> <span class="${final.netProfitCLP < 0 ? 'text-red-400' : 'text-green-400'}">${this.formatNumber(final.netProfitCLP, '$')}</span></p>
-                        <p><strong>Tesorería Acumulada:</strong> <span class="${final.treasuryCLP < 0 ? 'text-red-400' : 'text-green-400'}">${this.formatNumber(final.treasuryCLP, '$')}</span></p>
-                    </div></div>`;
-                    
-                    if (inflationAlerts.length > 0) {
-                        html += `<div class="mt-4 p-4 bg-amber-900/50 border-l-4 border-amber-500 rounded-r-lg"><h4 class="font-semibold text-amber-300">⚠️ Alerta de Inflación</h4><p class="text-sm text-amber-400 mt-1">La masa monetaria creció sobre 50% en los meses: <strong>${inflationAlerts.map(a => a.month).join(', ')}</strong>. El motor de crecimiento es muy agresivo.</p></div>`;
-                    }
-                    if (cashflowAlerts.length > 0) {
-                        html += `<div class="mt-4 p-4 bg-red-900/50 border-l-4 border-red-500 rounded-r-lg"><h4 class="font-semibold text-red-300">🚨 Alerta de Flujo de Caja Negativo</h4><p class="text-sm text-red-400 mt-1">El negocio pierde dinero real en los meses: <strong>${cashflowAlerts.map(a => a.month).join(', ')}</strong>. Revisar margen del marketplace y costos operativos.</p></div>`;
-                    }
-                    if (inflationAlerts.length === 0 && cashflowAlerts.length === 0) {
-                         html += `<div class="mt-4 p-4 bg-green-900/50 border-l-4 border-green-500 rounded-r-lg"><h4 class="font-semibold text-green-300">✅ Modelo de Negocio Sostenible</h4><p class="text-sm text-green-400 mt-1">Bajo los parámetros actuales, la economía virtual y las finanzas reales son estables y rentables.</p></div>`;
-                    }
-                    
-                    document.getElementById('adv_summary').innerHTML = html;
-                },
-
-                updateBancoCentral(results){
-                    const pane = document.getElementById('adv_banco_central');
-                    pane.innerHTML = `<h3 class="text-lg font-semibold mb-4 text-white">Diagnóstico del Banco Central</h3><div class="p-4 bg-green-900/50 border-l-4 border-green-500 rounded-r-lg"><h4 class="font-semibold text-green-300">✅ Sistema Estable</h4><p class="text-sm text-green-400 mt-1">No se requirieron intervenciones automáticas en este modelo. La economía operó dentro de los rangos de seguridad establecidos.</p></div>`;
-                },
-                
-                updateAcEconomy(results) {
-                    const pane = document.getElementById('adv_ac_economy');
-                    let canvas = pane.querySelector('canvas');
-                    let tableBody = pane.querySelector('tbody');
-
-                    if (!tableBody) {
-                        pane.innerHTML = `<h3 class="text-lg font-semibold mb-4 text-white">Evolución de la Economía Virtual (AC)</h3><div class="grid grid-cols-1 xl:grid-cols-2 gap-8"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-700"><thead class="bg-slate-800/50"><tr><th class="px-3 py-2 text-left text-xs font-medium text-slate-400">Mes</th><th class="px-3 py-2 text-left text-xs font-medium text-slate-400">Emitidos</th><th class="px-3 py-2 text-left text-xs font-medium text-slate-400">Gastados (Rifas)</th><th class="px-3 py-2 text-left text-xs font-medium text-slate-400">Recirculados (Premios)</th><th class="px-3 py-2 text-left text-xs font-medium text-slate-400">Absorbidos (Market)</th><th class="px-3 py-2 text-left text-xs font-medium text-slate-400">Circulante Final</th></tr></thead><tbody class="bg-slate-900/30 divide-y divide-slate-800"></tbody></table></div><div class="chart-container-economy"><canvas id="adv_ac_chart"></canvas></div></div>`;
-                        canvas = document.getElementById('adv_ac_chart');
-                        tableBody = pane.querySelector('tbody');
-                    }
-                    
-                    tableBody.innerHTML = '';
-                    results.forEach(res => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td class="px-3 py-2 text-sm font-medium text-white">${res.month}</td>
-                            <td class="px-3 py-2 text-sm text-green-400">+${this.formatNumber(res.emitted)}</td>
-                            <td class="px-3 py-2 text-sm text-red-400">-${this.formatNumber(res.spent)}</td>
-                            <td class="px-3 py-2 text-sm text-blue-400">+${this.formatNumber(res.awarded)}</td>
-                            <td class="px-3 py-2 text-sm text-amber-400">-${this.formatNumber(res.absorbed)}</td>
-                            <td class="px-3 py-2 text-sm font-semibold text-white">${this.formatNumber(res.circulating)}</td>`;
-                        tableBody.appendChild(row);
-                    });
-
-                    const data = {
+                let html = `<div class="space-y-4"><h3 class="text-lg font-semibold text-white">Panel de Gobernanza Económica</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-3 bg-slate-800/50 rounded-lg"><div class="font-bold text-blue-400">Inflación Promedio</div><div class="text-2xl font-bold">${avgInflation.toFixed(2)}%</div></div>
+                        <div class="p-3 bg-slate-800/50 rounded-lg"><div class="font-bold text-blue-400">Velocidad Moneda</div><div class="text-2xl font-bold">${(velocity || 0).toFixed(2)}</div></div>
+                        <div class="p-3 bg-slate-800/50 rounded-lg"><div class="font-bold text-blue-400">Ratio Absorción</div><div class="text-2xl font-bold">${absorptionRatio.toFixed(1)}%</div></div>
+                    </div>
+                    <div><h4 class="font-semibold text-slate-300 mb-2">Bitácora del Banco Central:</h4><ul class="space-y-1 bg-slate-900/70 p-3 rounded-md">${logHtml}</ul></div>
+                </div>`;
+                document.getElementById('banco_central').innerHTML = html;
+            },
+            updateUsers(results) { /* ... no changes ... */ 
+                this.renderTableAndChart(
+                    document.getElementById('users'), 'adv_users_chart', 'Análisis de Crecimiento de Usuarios',
+                    ['Mes', 'Inicio Mes', 'Nuevos (Pagado)', 'Nuevos (Viral)', 'Perdidos (Churn)', 'Final Mes'],
+                    results.map(res => [
+                        res.month, this.formatNumber(res.startUsers),
+                        `<span class="text-teal-400">+${this.formatNumber(res.newPaid)}</span>`,
+                        `<span class="text-green-400">+${this.formatNumber(res.newViral)}</span>`,
+                        `<span class="text-red-400">-${this.formatNumber(res.lostChurn)}</span>`,
+                        `<span class="font-bold">${this.formatNumber(res.endUsers)}</span>`,
+                    ]),
+                    {
+                        labels: results.map(r => `Mes ${r.month}`),
+                        datasets: [
+                            { label: 'Usuarios Totales', data: results.map(r => r.endUsers), borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.2, fill: true, type: 'line' },
+                            { label: 'Nuevos Virales', data: results.map(r => r.newViral), backgroundColor: 'rgba(34, 197, 94, 0.7)'},
+                            { label: 'Nuevos Pagados', data: results.map(r => r.newPaid), backgroundColor: 'rgba(245, 158, 11, 0.7)'}
+                        ]
+                    },
+                    { y: { stacked: true, title: { text: 'Usuarios' } } }
+                );
+            },
+            updateCohorts(results, params) {
+                const final = results[results.length-1];
+                 this.renderTableAndChart(
+                    document.getElementById('cohorts'), 'adv_cohorts_chart', 'Análisis de Cohortes de Usuarios',
+                    ['Cohorte', 'Usuarios', '% del Total', 'Ingreso Mensual', '% del Ingreso'],
+                    [
+                        ['Ballenas', `<span class="font-bold text-teal-300">${this.formatNumber(final.cohorts.whale.count)}</span>`, `${(params.cohorts.whale.pct*100).toFixed(0)}%`, this.formatNumber(final.cohorts.whale.revenue, '$'), `${(final.cohorts.whale.revenue / final.incomeCLP * 100 || 0).toFixed(0)}%`],
+                        ['Delfines', `<span class="font-bold text-blue-300">${this.formatNumber(final.cohorts.dolphin.count)}</span>`, `${(params.cohorts.dolphin.pct*100).toFixed(0)}%`, this.formatNumber(final.cohorts.dolphin.revenue, '$'), `${(final.cohorts.dolphin.revenue / final.incomeCLP * 100 || 0).toFixed(0)}%`],
+                        ['Pececillos', `<span class="font-bold text-slate-300">${this.formatNumber(final.cohorts.minnow.count)}</span>`, `${(params.cohorts.minnow.pct*100).toFixed(0)}%`, this.formatNumber(final.cohorts.minnow.revenue, '$'), `${(final.cohorts.minnow.revenue / final.incomeCLP * 100 || 0).toFixed(0)}%`],
+                    ],
+                    {
+                        labels: ['Ballenas', 'Delfines', 'Pececillos'],
+                        datasets: [
+                            { label: '% de Usuarios', data: [params.cohorts.whale.pct*100, params.cohorts.dolphin.pct*100, params.cohorts.minnow.pct*100], backgroundColor: ['#0d9488', '#2563eb', '#64748b'], yAxisID: 'y' },
+                            { label: '% de Ingresos', data: [(final.cohorts.whale.revenue / final.incomeCLP * 100 || 0), (final.cohorts.dolphin.revenue / final.incomeCLP * 100 || 0), (final.cohorts.minnow.revenue / final.incomeCLP * 100 || 0)], backgroundColor: ['rgba(13, 148, 136, 0.5)', 'rgba(37, 99, 235, 0.5)', 'rgba(100, 116, 139, 0.5)'], yAxisID: 'y' }
+                        ]
+                    },
+                    { y: { max: 100, title: { text: 'Porcentaje (%)' } } }
+                );
+            },
+            updateAcEconomy(results) { /* ... no changes ... */ 
+                 this.renderTableAndChart(
+                    document.getElementById('ac_economy'), 'adv_ac_chart', 'Evolución de la Economía Virtual (AC)',
+                    ['Mes', 'Emitidos', 'Gastados (Rifas)', 'Absorbidos (Market)', 'Inflación', 'Circulante Final'],
+                    results.map(res => [
+                        res.month, `<span class="text-green-400">+${this.formatNumber(res.emitted)}</span>`,
+                        `<span class="text-red-400">-${this.formatNumber(res.spent)}</span>`,
+                        `<span class="text-amber-400">-${this.formatNumber(res.absorbed)}</span>`,
+                        `<span class="${res.inflation > 10 ? 'text-amber-400 font-bold' : 'text-slate-300'}">${res.inflation.toFixed(1)}%</span>`,
+                        `<span class="font-bold">${this.formatNumber(res.circulating)}</span>`
+                    ]),
+                    {
                         labels: results.map(r => `Mes ${r.month}`),
                         datasets: [
                             { label: 'AC Circulantes', data: results.map(r => r.circulating), borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.2, yAxisID: 'y', fill: true, type: 'line' },
-                            { label: 'AC Gastados en Rifas', data: results.map(r => r.spent), backgroundColor: 'rgba(239, 68, 68, 0.7)', yAxisID: 'y1', type: 'bar' },
-                            { label: 'AC Recirculados (Premios)', data: results.map(r => r.awarded), backgroundColor: 'rgba(59, 130, 246, 0.7)', yAxisID: 'y1', type: 'bar' },
+                            { label: 'AC Emitidos', data: results.map(r => r.emitted), backgroundColor: 'rgba(34, 197, 94, 0.7)', yAxisID: 'y1', type: 'bar' },
+                            { label: 'AC Gastados', data: results.map(r => r.spent), backgroundColor: 'rgba(239, 68, 68, 0.7)', yAxisID: 'y1', type: 'bar' }
                         ]
-                    };
-                    if (this.acChart) { this.acChart.data = data; this.acChart.update(); }
-                    else {
-                        this.acChart = new Chart(canvas.getContext('2d'), {
-                            type: 'bar', data,
-                            options: {
-                                responsive: true, maintainAspectRatio: false,
-                                scales: {
-                                    y: { type: 'linear', position: 'left', title: { display: true, text: 'Total AC Circulantes', color: '#9ca3af' }, ticks: { color: '#9ca3af' } },
-                                    y1: { type: 'linear', position: 'right', title: { display: true, text: 'Flujo Mensual de AC', color: '#9ca3af' }, grid: { drawOnChartArea: false }, ticks: { color: '#9ca3af' } }
-                                },
-                                plugins: { legend: { labels: { color: '#cbd5e1' } }, tooltip: { mode: 'index', intersect: false, callbacks: { label: (c) => `${c.dataset.label}: ${this.formatNumber(c.parsed.y)}` } } }
-                            }
-                        });
-                    }
-                },
-
-                updateFinance(results) {
-                    const pane = document.getElementById('adv_finance');
-                    let canvas = pane.querySelector('canvas');
-                     if (!canvas) {
-                        pane.innerHTML = `
-                            <h3 class="text-lg font-semibold mb-4 text-white">Análisis Financiero (CLP)</h3>
-                            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                                <div class="overflow-x-auto">
-                                    <table class="min-w-full divide-y divide-slate-700"><thead class="bg-slate-800/50"><tr>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-slate-400">Mes</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-slate-400">Ingresos</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-slate-400">Costos</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-slate-400">Ganancia Neta</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-slate-400">Tesorería</th>
-                                    </tr></thead><tbody class="bg-slate-900/30 divide-y divide-slate-800"></tbody></table>
-                                </div>
-                                <div class="chart-container-economy"><canvas id="finance-chart"></canvas></div>
-                            </div>`;
-                        canvas = document.getElementById('finance-chart');
-                    }
-                    const tableBody = pane.querySelector('tbody');
-                    tableBody.innerHTML = '';
-                    results.forEach(res => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td class="px-3 py-2 text-sm text-white">${res.month}</td>
-                            <td class="px-3 py-2 text-sm text-green-400">${this.formatNumber(res.incomeCLP, '$')}</td>
-                            <td class="px-3 py-2 text-sm text-amber-400">${this.formatNumber(res.costsCLP, '$')}</td>
-                            <td class="px-3 py-2 text-sm font-bold ${res.netProfitCLP < 0 ? 'text-red-400' : 'text-green-400'}">${this.formatNumber(res.netProfitCLP, '$')}</td>
-                            <td class="px-3 py-2 text-sm font-semibold ${res.treasuryCLP < 0 ? 'text-red-400' : 'text-white'}">${this.formatNumber(res.treasuryCLP, '$')}</td>`;
-                        tableBody.appendChild(row);
-                    });
-                    const data = {
+                    },
+                    { y: { title: { text: 'Total AC Circulantes' } }, y1: { position: 'right', title: { text: 'Flujo Mensual de AC' }, grid: { drawOnChartArea: false }, stacked: true } }
+                );
+            },
+            updateMarketplace(results) { /* ... no changes ... */ 
+                this.renderTableAndChart(
+                    document.getElementById('marketplace'), 'adv_marketplace_chart', 'Análisis de Rentabilidad del Marketplace',
+                    ['Mes', 'AC Gastados', 'Ventas (CLP)', 'Costo Productos (CLP)', 'Ganancia Neta (CLP)'],
+                    results.map(res => [
+                        res.month,
+                        `<span class="text-amber-400">${this.formatNumber(res.absorbed)}</span>`,
+                        this.formatNumber(res.marketplaceRevenueCLP, '$'),
+                        this.formatNumber(res.marketplaceCogsCLP, '$'),
+                        `<span class="font-bold ${res.marketplaceProfitCLP < 0 ? 'text-red-400' : 'text-green-400'}">${this.formatNumber(res.marketplaceProfitCLP, '$')}</span>`
+                    ]),
+                    {
                         labels: results.map(r => `Mes ${r.month}`),
                         datasets: [
+                            { label: 'Ventas CLP', data: results.map(r => r.marketplaceRevenueCLP), backgroundColor: 'rgba(34, 197, 94, 0.7)'},
+                            { label: 'Costo Productos CLP', data: results.map(r => r.marketplaceCogsCLP), backgroundColor: 'rgba(239, 68, 68, 0.7)'},
+                            { label: 'Ganancia Neta CLP', data: results.map(r => r.marketplaceProfitCLP), backgroundColor: 'rgba(59, 130, 246, 0.7)'}
+                        ]
+                    },
+                    { y: { stacked: false, title: { text: 'CLP' } } }
+                );
+            },
+            updateFinance(results) { /* ... no changes ... */ 
+                this.renderTableAndChart(
+                    document.getElementById('finance'), 'adv_finance_chart', 'Análisis Financiero General (CLP)',
+                    ['Mes', 'Ingresos', 'Costos', 'Ganancia Neta', 'Tesorería'],
+                    results.map(res => [
+                        res.month, `<span class="text-green-400">${this.formatNumber(res.incomeCLP, '$')}</span>`,
+                        `<span class="text-amber-400">${this.formatNumber(res.costsCLP, '$')}</span>`,
+                        `<span class="font-bold ${res.netProfitCLP < 0 ? 'text-red-400' : 'text-green-400'}">${this.formatNumber(res.netProfitCLP, '$')}</span>`,
+                        `<span class="font-semibold ${res.treasuryCLP < 0 ? 'text-red-400' : 'text-white'}">${this.formatNumber(res.treasuryCLP, '$')}</span>`
+                    ]),
+                    {
+                         labels: results.map(r => `Mes ${r.month}`),
+                        datasets: [
                             { type: 'bar', label: 'Ingresos CLP', data: results.map(r => r.incomeCLP), backgroundColor: 'rgba(34, 197, 94, 0.7)', yAxisID: 'y' },
-                            { type: 'bar', label: 'Costos CLP', data: results.map(r => r.costsCLP), backgroundColor: 'rgba(249, 115, 22, 0.7)', yAxisID: 'y' },
+                            { type: 'bar', label: 'Costos CLP', data: results.map(r => r.costsCLP), backgroundColor: 'rgba(239, 68, 68, 0.7)', yAxisID: 'y' },
                             { type: 'line', label: 'Tesorería CLP', data: results.map(r => r.treasuryCLP), borderColor: '#60a5fa', tension: 0.2, yAxisID: 'y1', fill: false, borderWidth: 3 }
                         ]
-                    };
-                    if (this.financeChart) { this.financeChart.data = data; this.financeChart.update(); }
-                    else {
-                         this.financeChart = new Chart(canvas.getContext('2d'), {
-                            type: 'bar', data: data,
-                            options: {
-                                responsive: true, maintainAspectRatio: false,
-                                scales: {
-                                    x: { ticks: { color: '#9ca3af' } },
-                                    y: { type: 'linear', position: 'left', title: { display: true, text: 'Flujo Mensual (CLP)', color: '#9ca3af' }, ticks: { color: '#9ca3af' } },
-                                    y1: { type: 'linear', position: 'right', title: { display: true, text: 'Tesorería Acumulada (CLP)', color: '#9ca3af' }, grid: { drawOnChartArea: false }, ticks: { color: '#9ca3af' } }
-                                },
-                                plugins: { legend: { labels: { color: '#cbd5e1' } }, tooltip: { mode: 'index', intersect: false, callbacks: { label: (c) => `${c.dataset.label}: ${this.formatNumber(c.parsed.y, '$', ' CLP')}` } } }
-                            }
-                        });
-                    }
-                },
+                    }, 
+                    { y: { title: { text: 'Flujo Mensual (CLP)' } }, y1: { position: 'right', title: { text: 'Tesorería Acumulada (CLP)' }, grid: { drawOnChartArea: false } } }
+                );
+            },
+            renderTableAndChart(pane, canvasId, title, headers, rowsData, chartData, chartScales) {
+                let canvas = pane.querySelector('canvas');
+                let tableBody = pane.querySelector('tbody');
+                if (!tableBody) {
+                    pane.innerHTML = `<h3 class="text-lg font-semibold mb-4 text-white">${title}</h3><div class="grid grid-cols-1 xl:grid-cols-2 gap-8"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-700 text-sm"><thead class="bg-slate-800/50"><tr>${headers.map(h => `<th class="px-3 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">${h}</th>`).join('')}</tr></thead><tbody class="bg-slate-900/30 divide-y divide-slate-800"></tbody></table></div><div class="chart-container"><canvas id="${canvasId}"></canvas></div></div>`;
+                    canvas = document.getElementById(canvasId);
+                    tableBody = pane.querySelector('tbody');
+                }
                 
-                setupTabs() {
-                    const advTabs = document.querySelectorAll('#advanced_simulator_section .tab-button');
-                    const advPanes = document.querySelectorAll('#advanced_simulator_section .content-pane');
-                    advTabs.forEach(tab => {
-                        tab.addEventListener('click', () => {
-                            advTabs.forEach(t => t.classList.remove('active'));
-                            advPanes.forEach(p => p.classList.remove('active'));
-                            tab.classList.add('active');
-                            document.getElementById(tab.dataset.tab).classList.add('active');
-                        });
+                tableBody.innerHTML = '';
+                rowsData.forEach(rowData => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = rowData.map((d, i) => `<td class="px-3 py-2 whitespace-nowrap ${i === 0 ? 'font-medium text-white' : ''}">${d}</td>`).join('');
+                    tableBody.appendChild(row);
+                });
+
+                this.createOrUpdateChart(canvas, canvasId, chartData, chartScales);
+            },
+            createOrUpdateChart(canvas, canvasId, data, scales) {
+                if (this.charts[canvasId]) { this.charts[canvasId].data = data; this.charts[canvasId].options.scales = this.getChartScales(scales); this.charts[canvasId].update(); }
+                else {
+                    this.charts[canvasId] = new Chart(canvas.getContext('2d'), {
+                        type: 'bar', data,
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            scales: this.getChartScales(scales),
+                            plugins: { legend: { labels: { color: '#cbd5e1' } }, tooltip: { mode: 'index', intersect: false, callbacks: { label: (c) => `${c.dataset.label}: ${this.formatNumber(c.parsed.y)}` } } }
+                        }
                     });
                 }
-            };
-            businessSimulator.init();
-        });
+            },
+            getChartScales(scales) {
+                return { ...Object.fromEntries(Object.entries(scales).map(([k, v]) => [k, { ...v, ticks: { color: '#9ca3af' }, title: { ...v.title, display: true, color: '#9ca3af' } }])), x: { ticks: { color: '#9ca3af' }} };
+            },
+            setupTabs() {
+                const tabs = document.querySelectorAll('#advanced_simulator_section .tab-button');
+                const panes = document.querySelectorAll('#advanced_simulator_section .content-pane');
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        tabs.forEach(t => t.classList.remove('active'));
+                        panes.forEach(p => p.classList.remove('active'));
+                        tab.classList.add('active');
+                        document.getElementById(tab.dataset.tab).classList.add('active');
+                    });
+                });
+            }
+        };
+        businessSimulator.init();
+    });
     </script>
 </body>
 </html>
