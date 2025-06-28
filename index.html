@@ -19,6 +19,13 @@
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #2563eb; cursor: pointer; border-radius: 50%; }
         .dark input[type="range"] { background: #475569; }
         .param-section h4 { font-weight: 600; color: #cbd5e1; font-size: 1.1rem; border-bottom: 1px solid #475569; padding-bottom: 0.5rem; margin-bottom: 1rem;}
+        .btn { padding: 0.5rem 1rem; border-radius: 0.375rem; font-weight: 600; transition: all 0.2s; }
+        .btn-primary { background-color: #2563eb; color: white; }
+        .btn-primary:hover { background-color: #1d4ed8; }
+        .btn-secondary { background-color: #475569; color: #e2e8f0; }
+        .btn-secondary:hover { background-color: #64748b; }
+        .btn-export { background-color: #059669; color: white; font-size: 0.75rem; padding: 0.25rem 0.5rem; }
+        .btn-export:hover { background-color: #047857; }
     </style>
 </head>
 <body class="antialiased">
@@ -70,7 +77,11 @@
                          <div><label for="simulationMonths" class="text-sm">Meses a Simular</label><input type="range" id="simulationMonths" min="12" max="48" value="12"><span id="simulationMonthsValue" class="float-right"></span></div>
                     </div>
                 </div>
-                <div class="text-center mt-8"><button id="run-simulation" class="bg-blue-600 text-white font-bold py-3 px-10 rounded-lg hover:bg-blue-700 transition-transform transform hover:scale-105">Ejecutar Simulación</button></div>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
+                    <button id="run-simulation" class="btn btn-primary w-full sm:w-auto">Ejecutar Simulación</button>
+                    <button id="save-scenario" class="btn btn-secondary w-full sm:w-auto">Guardar Escenario</button>
+                    <button id="load-scenario" class="btn btn-secondary w-full sm:w-auto">Cargar Escenario</button>
+                </div>
             </div>
 
             <div class="bg-slate-900/50 rounded-xl shadow-lg p-4 sm:p-6">
@@ -79,7 +90,7 @@
                         <button class="tab-button active py-3 px-4 font-medium text-sm" data-tab="summary">Resumen Ejecutivo</button>
                         <button class="tab-button text-slate-300 hover:bg-slate-700/50 py-3 px-4 font-medium text-sm" data-tab="banco_central">Gobernanza</button>
                         <button class="tab-button text-slate-300 hover:bg-slate-700/50 py-3 px-4 font-medium text-sm" data-tab="users">Usuarios</button>
-                         <button class="tab-button text-slate-300 hover:bg-slate-700/50 py-3 px-4 font-medium text-sm" data-tab="cohorts">Cohortes</button>
+                        <button class="tab-button text-slate-300 hover:bg-slate-700/50 py-3 px-4 font-medium text-sm" data-tab="cohorts">Cohortes</button>
                         <button class="tab-button text-slate-300 hover:bg-slate-700/50 py-3 px-4 font-medium text-sm" data-tab="ac_economy">Economía AC</button>
                         <button class="tab-button text-slate-300 hover:bg-slate-700/50 py-3 px-4 font-medium text-sm" data-tab="marketplace">Marketplace</button>
                         <button class="tab-button text-slate-300 hover:bg-slate-700/50 py-3 px-4 font-medium text-sm" data-tab="finance">Finanzas CLP</button>
@@ -106,6 +117,8 @@
                 this.setupSliders();
                 this.setupTabs();
                 document.getElementById('run-simulation').addEventListener('click', () => this.run());
+                document.getElementById('save-scenario').addEventListener('click', () => this.saveScenario());
+                document.getElementById('load-scenario').addEventListener('click', () => this.loadScenario());
                 this.run();
             },
             setupSliders() {
@@ -124,6 +137,7 @@
                 Object.entries(this.sliders).forEach(([key, slider]) => {
                     if (slider.type !== 'range') return;
                     const display = document.getElementById(`${key}Value`);
+                    if (!display) return;
                     let value = parseFloat(slider.value);
                     let text = this.formatNumber(value);
 
@@ -131,7 +145,6 @@
                     const dolphinPercent = parseFloat(this.sliders.dolphin_percent.value);
                     const minnowPercent = 100 - whalePercent - dolphinPercent;
                     if(document.getElementById('minnow_percentValue')) document.getElementById('minnow_percentValue').textContent = `${minnowPercent.toFixed(0)}%`;
-
 
                     if (['marketingBudget', 'cpaPaid', 'whale_arpu', 'dolphin_arpu', 'minnow_arpu', 'opex'].includes(key)) text = this.formatNumber(value, '$');
                     if (['conversionRate', 'churnRate', 'seguroRate', 'raffleMargin', 'marketplaceMargin', 'redemptionRate', 'whale_percent', 'dolphin_percent', 'inflation_target'].includes(key)) text = `${value}%`;
@@ -142,7 +155,6 @@
             formatNumber: (num, prefix = '', suffix = '') => `${prefix}${new Intl.NumberFormat('es-CL').format(Math.round(num))}${suffix}`,
             
             run() {
-                // --- SETUP PARAMS ---
                 const P = {
                     initialUsers: parseInt(this.sliders.initialUsers.value),
                     marketingBudget: parseInt(this.sliders.marketingBudget.value),
@@ -169,34 +181,29 @@
                 P.kFactor = P.invitesPerUser * P.conversionRate;
                 P.avgArpu = (P.cohorts.whale.pct * P.cohorts.whale.arpu) + (P.cohorts.dolphin.pct * P.cohorts.dolphin.arpu) + (P.cohorts.minnow.pct * P.cohorts.minnow.arpu);
 
-                // --- SIMULATION ENGINE ---
                 let monthlyResults = [];
                 let activeUsers = P.initialUsers;
-                let circulatingAC = P.initialUsers * 20; // Avg starting balance
+                let circulatingAC = P.initialUsers * 20; 
                 let treasuryCLP = 0;
                 let governorLog = [];
                 let currentReferralBonus = P.baseReferredBonusAC;
 
                 for (let m = 1; m <= P.simulationMonths; m++) {
-                    const startOfMonthUsers = activeUsers;
-                    
-                    // Governance Check
                     if (P.governor_enabled && m > 1) {
                         const lastMonthInflation = monthlyResults[m-2].inflation;
                         if (lastMonthInflation > P.inflation_target * 100) {
-                            currentReferralBonus = Math.max(1, currentReferralBonus * 0.9); // Reduce bonus by 10%
-                            governorLog.push({month: m, action: `Inflación ${lastMonthInflation.toFixed(1)}% > ${P.inflation_target*100}%. Bonus de referido reducido a ${currentReferralBonus.toFixed(1)} AC.`});
+                            currentReferralBonus = Math.max(1, currentReferralBonus * 0.9);
+                            governorLog.push({month: m, action: `Inflación alta. Bonus de referido reducido a ${currentReferralBonus.toFixed(1)} AC.`});
                         } else {
-                            currentReferralBonus = Math.min(P.baseReferredBonusAC, currentReferralBonus * 1.05); // Slowly restore bonus
+                            currentReferralBonus = Math.min(P.baseReferredBonusAC, currentReferralBonus * 1.05);
                         }
                     }
 
-                    // User Flow
+                    const startOfMonthUsers = activeUsers;
                     const usersLostToChurn = activeUsers * P.churnRate;
                     const newPaidUsers = P.marketingBudget > 0 ? P.marketingBudget / P.cpaPaid : 0;
                     const newViralUsers = activeUsers * P.kFactor;
                     
-                    // Financials
                     const costReferralsCLP = newViralUsers * (P.baseReferralCostAC + currentReferralBonus) * P.acToCLP;
                     const totalAcquisitionCosts = P.marketingBudget + costReferralsCLP;
                     
@@ -204,7 +211,6 @@
                     const revenueSeguroCLP = activeUsers * P.seguroRate * P.seguroPrice;
                     const totalRevenueCLP = revenueCoinsCLP + revenueSeguroCLP;
                     
-                    // AC Economy
                     const acIssuedPurchases = revenueCoinsCLP / P.acToCLP;
                     const acSpentInRaffles = (activeUsers * P.avgArpu) / P.acToCLP;
                     const acIssuedCashback = acSpentInRaffles * P.cashbackRate;
@@ -226,10 +232,13 @@
                     activeUsers += newPaidUsers + newViralUsers - usersLostToChurn;
                     if (activeUsers < 1) activeUsers = 1;
 
+                    const totalNewUsers = newPaidUsers + newViralUsers;
+                    const blendedCAC = totalNewUsers > 0 ? totalAcquisitionCosts / totalNewUsers : 0;
+                    
                     monthlyResults.push({
                         month: m, startUsers: startOfMonthUsers, newPaid: newPaidUsers, newViral: newViralUsers, lostChurn: usersLostToChurn, endUsers: activeUsers,
                         emitted: totalEmitted, spent: acSpentInRaffles, absorbed: acRedeemedFromPrizes, circulating: circulatingAC, inflation,
-                        incomeCLP: totalRevenueCLP, costsCLP: finalTotalCosts, netProfitCLP, treasuryCLP,
+                        incomeCLP: totalRevenueCLP, costsCLP: finalTotalCosts, netProfitCLP, treasuryCLP, blendedCAC,
                         marketplaceRevenueCLP: acRedeemedFromPrizes * P.acToCLP, marketplaceCogsCLP: cogsMarketplaceCLP, marketplaceProfitCLP: (acRedeemedFromPrizes * P.acToCLP) - cogsMarketplaceCLP,
                         cohorts: {
                             whale: {count: activeUsers * P.cohorts.whale.pct, revenue: activeUsers * P.cohorts.whale.pct * P.cohorts.whale.arpu},
@@ -241,9 +250,8 @@
                 this.updateUI(monthlyResults, governorLog, P);
             },
             
-            // --- UI UPDATE FUNCTIONS ---
             updateUI(results, governorLog, params) {
-                this.updateSummary(results);
+                this.updateSummary(results, params);
                 this.updateBancoCentral(results, governorLog);
                 this.updateUsers(results);
                 this.updateCohorts(results, params);
@@ -251,34 +259,33 @@
                 this.updateMarketplace(results);
                 this.updateFinance(results);
             },
-            updateSummary(results) { /* ... same as before ... */ 
+            updateSummary(results, params) { 
                 const final = results[results.length - 1];
+                const totalRevenue = results.reduce((sum, r) => sum + r.incomeCLP, 0);
+                const totalCosts = results.reduce((sum, r) => sum + r.costsCLP, 0);
+                const totalUsers = final.endUsers - params.initialUsers;
+                const LTV = params.churnRate > 0 ? (params.avgArpu * (1 - params.churnRate)) / params.churnRate : Infinity;
+                const overallCAC = totalUsers > 0 ? (results.reduce((sum,r) => sum + r.costsCLP - r.marketplaceCogsCLP - params.opex , 0)) / totalUsers : 0;
+                const ltvCacRatio = overallCAC > 0 ? LTV / overallCAC : Infinity;
+                
+                let html = `<div class="p-4 bg-slate-800/50 rounded-lg"><h4 class="font-semibold text-slate-200">Resultados Clave (Anual)</h4><div class="mt-2 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <p><strong>Usuarios Finales:</strong> ${this.formatNumber(final.endUsers)}</p>
+                    <p><strong>Tesorería Final:</strong> <span class="${final.treasuryCLP < 0 ? 'text-red-400' : 'text-green-400'}">${this.formatNumber(final.treasuryCLP, '$')}</span></p>
+                    <p><strong>CAC Combinado:</strong> ${this.formatNumber(overallCAC, '$')}</p>
+                    <p><strong>Ratio LTV/CAC:</strong> <span class="${ltvCacRatio < 3 ? 'text-amber-400' : 'text-green-400'}">${ltvCacRatio.toFixed(2)}</span></p>
+                </div></div>`;
+                
                 const inflationAlerts = results.filter(r => r.inflation > 25);
                 const cashflowAlerts = results.filter(r => r.netProfitCLP < 0);
-                const treasuryAlert = final.treasuryCLP < 0;
-
-                let html = `<div class="p-4 bg-slate-800/50 rounded-lg"><h4 class="font-semibold text-slate-200">Resultados Clave (Mes ${results.length})</h4><div class="mt-2 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <p><strong>Usuarios Finales:</strong> ${this.formatNumber(final.endUsers)}</p>
-                    <p><strong>AC Circulantes:</strong> ${this.formatNumber(final.circulating)}</p>
-                    <p><strong>Ganancia Neta (Mes Final):</strong> <span class="${final.netProfitCLP < 0 ? 'text-red-400' : 'text-green-400'}">${this.formatNumber(final.netProfitCLP, '$')}</span></p>
-                    <p><strong>Tesorería Acumulada:</strong> <span class="${final.treasuryCLP < 0 ? 'text-red-400' : 'text-green-400'}">${this.formatNumber(final.treasuryCLP, '$')}</span></p>
-                </div></div>`;
-                if (inflationAlerts.length > 0) {
-                    html += `<div class="mt-4 p-4 bg-amber-900/50 border-l-4 border-amber-500 rounded-r-lg"><h4 class="font-semibold text-amber-300">⚠️ Alerta de Inflación</h4><p class="text-sm text-amber-400 mt-1">La masa monetaria creció sobre 25% en los meses: <strong>${inflationAlerts.map(a => a.month).join(', ')}</strong>.</p></div>`;
-                }
-                if (cashflowAlerts.length > 0) {
-                     html += `<div class="mt-4 p-4 bg-red-900/50 border-l-4 border-red-500 rounded-r-lg"><h4 class="font-semibold text-red-300">🚨 Alerta de Flujo de Caja</h4><p class="text-sm text-red-400 mt-1">El negocio tuvo flujo de caja negativo en los meses: <strong>${cashflowAlerts.map(a => a.month).join(', ')}</strong>.</p></div>`;
-                }
-                if(treasuryAlert) {
-                     html += `<div class="mt-4 p-4 bg-red-900/50 border-l-4 border-red-500 rounded-r-lg"><h4 class="font-semibold text-red-300">🚨 ALERTA MÁXIMA: QUIEBRA</h4><p class="text-sm text-red-400 mt-1">La tesorería es negativa. El modelo de negocio no es sostenible bajo estos parámetros.</p></div>`;
-                }
-                if (inflationAlerts.length === 0 && cashflowAlerts.length === 0 && !treasuryAlert) {
-                     html += `<div class="mt-4 p-4 bg-green-900/50 border-l-4 border-green-500 rounded-r-lg"><h4 class="font-semibold text-green-300">✅ Modelo Sostenible</h4><p class="text-sm text-green-400 mt-1">La economía y las finanzas son estables y rentables.</p></div>`;
-                }
+                if (inflationAlerts.length > 0) html += `<div class="mt-4 p-4 bg-amber-900/50 border-l-4 border-amber-500 rounded-r-lg"><h4 class="font-semibold text-amber-300">⚠️ Alerta de Inflación</h4><p class="text-sm text-amber-400 mt-1">Crecimiento monetario sobre 25% en meses: <strong>${inflationAlerts.map(a => a.month).join(', ')}</strong>.</p></div>`;
+                if (cashflowAlerts.length > 0) html += `<div class="mt-4 p-4 bg-red-900/50 border-l-4 border-red-500 rounded-r-lg"><h4 class="font-semibold text-red-300">🚨 Alerta de Flujo de Caja</h4><p class="text-sm text-red-400 mt-1">Flujo de caja negativo en meses: <strong>${cashflowAlerts.map(a => a.month).join(', ')}</strong>.</p></div>`;
+                if (ltvCacRatio < 3 && ltvCacRatio !== Infinity) html += `<div class="mt-4 p-4 bg-amber-900/50 border-l-4 border-amber-500 rounded-r-lg"><h4 class="font-semibold text-amber-300">⚠️ Alerta de Rentabilidad</h4><p class="text-sm text-amber-400 mt-1">El ratio LTV/CAC es menor a 3. El costo de adquirir usuarios es demasiado alto para su valor a largo plazo.</p></div>`;
+                if (inflationAlerts.length === 0 && cashflowAlerts.length === 0 && (ltvCacRatio >= 3 || ltvCacRatio === Infinity)) html += `<div class="mt-4 p-4 bg-green-900/50 border-l-4 border-green-500 rounded-r-lg"><h4 class="font-semibold text-green-300">✅ Modelo Sostenible</h4><p class="text-sm text-green-400 mt-1">La economía y las finanzas son estables y rentables.</p></div>`;
+                
                 document.getElementById('summary').innerHTML = html;
             },
-            updateBancoCentral(results, governorLog) {
-                 const avgInflation = results.reduce((acc, r) => acc + r.inflation, 0) / results.length;
+            updateBancoCentral(results, governorLog) { /* ... no changes ... */ 
+                const avgInflation = results.reduce((acc, r) => acc + r.inflation, 0) / results.length;
                  const velocity = results.reduce((acc, r) => acc + r.spent, 0) / results.reduce((acc, r) => acc + r.circulating, 0);
                  const absorptionRatio = (results.reduce((a,r)=>a+r.absorbed,0) / results.reduce((a,r)=>a+r.emitted,0) * 100 || 0);
                  let logHtml = governorLog.length > 0 ? governorLog.map(l => `<li class="text-xs"><strong>Mes ${l.month}:</strong> ${l.action}</li>`).join('') : '<li class="text-xs text-slate-400">No se requirieron intervenciones.</li>';
@@ -294,7 +301,7 @@
                 document.getElementById('banco_central').innerHTML = html;
             },
             updateUsers(results) { /* ... no changes ... */ 
-                this.renderTableAndChart(
+                 this.renderTableAndChart(
                     document.getElementById('users'), 'adv_users_chart', 'Análisis de Crecimiento de Usuarios',
                     ['Mes', 'Inicio Mes', 'Nuevos (Pagado)', 'Nuevos (Viral)', 'Perdidos (Churn)', 'Final Mes'],
                     results.map(res => [
@@ -315,10 +322,10 @@
                     { y: { stacked: true, title: { text: 'Usuarios' } } }
                 );
             },
-            updateCohorts(results, params) {
+            updateCohorts(results, params) { /* ... no changes ... */ 
                 const final = results[results.length-1];
                  this.renderTableAndChart(
-                    document.getElementById('cohorts'), 'adv_cohorts_chart', 'Análisis de Cohortes de Usuarios',
+                    document.getElementById('cohorts'), 'adv_cohorts_chart', 'Análisis de Cohortes de Usuarios (Mes Final)',
                     ['Cohorte', 'Usuarios', '% del Total', 'Ingreso Mensual', '% del Ingreso'],
                     [
                         ['Ballenas', `<span class="font-bold text-teal-300">${this.formatNumber(final.cohorts.whale.count)}</span>`, `${(params.cohorts.whale.pct*100).toFixed(0)}%`, this.formatNumber(final.cohorts.whale.revenue, '$'), `${(final.cohorts.whale.revenue / final.incomeCLP * 100 || 0).toFixed(0)}%`],
@@ -336,7 +343,7 @@
                 );
             },
             updateAcEconomy(results) { /* ... no changes ... */ 
-                 this.renderTableAndChart(
+                this.renderTableAndChart(
                     document.getElementById('ac_economy'), 'adv_ac_chart', 'Evolución de la Economía Virtual (AC)',
                     ['Mes', 'Emitidos', 'Gastados (Rifas)', 'Absorbidos (Market)', 'Inflación', 'Circulante Final'],
                     results.map(res => [
@@ -358,7 +365,7 @@
                 );
             },
             updateMarketplace(results) { /* ... no changes ... */ 
-                this.renderTableAndChart(
+                 this.renderTableAndChart(
                     document.getElementById('marketplace'), 'adv_marketplace_chart', 'Análisis de Rentabilidad del Marketplace',
                     ['Mes', 'AC Gastados', 'Ventas (CLP)', 'Costo Productos (CLP)', 'Ganancia Neta (CLP)'],
                     results.map(res => [
@@ -404,9 +411,10 @@
                 let canvas = pane.querySelector('canvas');
                 let tableBody = pane.querySelector('tbody');
                 if (!tableBody) {
-                    pane.innerHTML = `<h3 class="text-lg font-semibold mb-4 text-white">${title}</h3><div class="grid grid-cols-1 xl:grid-cols-2 gap-8"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-700 text-sm"><thead class="bg-slate-800/50"><tr>${headers.map(h => `<th class="px-3 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">${h}</th>`).join('')}</tr></thead><tbody class="bg-slate-900/30 divide-y divide-slate-800"></tbody></table></div><div class="chart-container"><canvas id="${canvasId}"></canvas></div></div>`;
+                    pane.innerHTML = `<div class="flex justify-between items-center mb-4"><h3 class="text-lg font-semibold text-white">${title}</h3><button class="btn-export btn" data-table-id="${canvasId}-table">Exportar CSV</button></div><div class="grid grid-cols-1 xl:grid-cols-2 gap-8"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-700 text-sm" id="${canvasId}-table"><thead class="bg-slate-800/50"><tr>${headers.map(h => `<th class="px-3 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">${h}</th>`).join('')}</tr></thead><tbody class="bg-slate-900/30 divide-y divide-slate-800"></tbody></table></div><div class="chart-container"><canvas id="${canvasId}"></canvas></div></div>`;
                     canvas = document.getElementById(canvasId);
                     tableBody = pane.querySelector('tbody');
+                    pane.querySelector('.btn-export').addEventListener('click', (e) => this.exportToCSV(e.target.dataset.tableId, `${title}.csv`));
                 }
                 
                 tableBody.innerHTML = '';
@@ -445,6 +453,56 @@
                         document.getElementById(tab.dataset.tab).classList.add('active');
                     });
                 });
+            },
+            saveScenario() {
+                const scenario = {};
+                Object.entries(this.sliders).forEach(([key, slider]) => {
+                    scenario[key] = slider.type === 'checkbox' ? slider.checked : slider.value;
+                });
+                localStorage.setItem('astralyxz_wargame_scenario', JSON.stringify(scenario));
+                alert('Escenario guardado con éxito!');
+            },
+            loadScenario() {
+                const scenario = JSON.parse(localStorage.getItem('astralyxz_wargame_scenario'));
+                if (scenario) {
+                    Object.entries(scenario).forEach(([key, value]) => {
+                        if (this.sliders[key]) {
+                            if (this.sliders[key].type === 'checkbox') this.sliders[key].checked = value;
+                            else this.sliders[key].value = value;
+                        }
+                    });
+                    this.updateSliderDisplay();
+                    this.run();
+                    alert('Escenario cargado con éxito!');
+                } else {
+                    alert('No hay ningún escenario guardado.');
+                }
+            },
+            exportToCSV(tableId, filename) {
+                let csv = [];
+                const table = document.getElementById(tableId);
+                const rows = table.querySelectorAll("tr");
+                
+                for (const row of rows) {
+                    const cols = row.querySelectorAll("td, th");
+                    const rowData = [];
+                    for (const col of cols) {
+                        // Limpiar el texto para que sea compatible con CSV
+                        let data = col.innerText.replace(/(\r\n|\n|\r)/gm, "").replace(/(\s\s)/gm, " ");
+                        data = data.replace(/"/g, '""'); // Escapar comillas dobles
+                        rowData.push(`"${data}"`);
+                    }
+                    csv.push(rowData.join(","));
+                }
+
+                const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+                const downloadLink = document.createElement("a");
+                downloadLink.download = filename;
+                downloadLink.href = window.URL.createObjectURL(csvFile);
+                downloadLink.style.display = "none";
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
             }
         };
         businessSimulator.init();
